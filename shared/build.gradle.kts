@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -53,6 +54,9 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.compose.icons.extended)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.jetbrains.navigation3.ui)
 
             // DI
             implementation(libs.koin.core)

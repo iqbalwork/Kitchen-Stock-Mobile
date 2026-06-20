@@ -54,6 +54,7 @@ Every UI screen MUST be split into two separate composable files to maintain sep
     - Responsible ONLY for UI rendering (drawing the screen).
     - Receives primitive data types, UI states, and lambda functions for user interactions.
     - Must be completely isolated from `ViewModel` or remote data sources.
+    - **MUST** wrap the top-level layout inside `KitchenStockTheme` to ensure consistent styling and access to `LocalSpacing`.
 
 ### 2. Component Organization
 - **Feature-Specific Components:** Put custom, single-use UI elements (buttons, cards, dialogs) inside the feature's presentation directory:
@@ -69,6 +70,7 @@ Every UI screen MUST be split into two separate composable files to maintain sep
 ### 4. Compose Previews (Mandatory)
 - Every `*Content.kt` file and every individual UI component MUST have a `@Preview` function.
 - Previews must demonstrate both **Light** and **Dark** modes to ensure theme consistency.
+- Previews **MUST** be wrapped inside `KitchenStockTheme`.
 - Since `*Content` and components are stateless, always generate mock data, dummy states, or use `@PreviewParameter` to populate the previews with realistic content.
 - Never include `ViewModel` or real Data Layer dependencies in previews.
 
