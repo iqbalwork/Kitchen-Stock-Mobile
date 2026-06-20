@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -5,6 +6,8 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.sqldelight)
+    alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -37,6 +40,9 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
+            implementation(libs.sqldelight.android.driver)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -47,10 +53,51 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            // DI
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+
+            // Database
+            implementation(libs.sqldelight.runtime)
+
+            // Backend
+            implementation(libs.supabase.postgrest)
+            implementation(libs.supabase.auth)
+            implementation(libs.supabase.realtime)
+
+            // Image Loading
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+
+            // Networking & Debugging
+            implementation(libs.ktor.client.core)
+            implementation(libs.wiretap.ktor)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native.driver)
+            implementation(libs.ktor.client.darwin)
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("KitchenDatabase") {
+            packageName.set("com.iqbalfauzi.kitchenstockmobile.db")
+        }
+    }
+}
+
+buildkonfig {
+    packageName = "com.iqbalfauzi.kitchenstockmobile"
+
+    defaultConfigs {
+        buildConfigField(STRING, "SUPABASE_URL", "")
+        buildConfigField(STRING, "SUPABASE_ANON_KEY", "")
     }
 }
 
