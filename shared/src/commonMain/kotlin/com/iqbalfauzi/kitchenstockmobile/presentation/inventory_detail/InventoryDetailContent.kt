@@ -1,6 +1,8 @@
 package com.iqbalfauzi.kitchenstockmobile.presentation.inventory_detail
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
@@ -34,6 +37,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,9 +51,11 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,10 +67,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation as StorageLocationDomain
 import com.iqbalfauzi.kitchenstockmobile.presentation.inventory_detail.model.InventoryDetailUiState
 import com.iqbalfauzi.kitchenstockmobile.presentation.inventory_detail.model.StorageLocation
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.KitchenStockTheme
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +87,42 @@ fun InventoryDetailContent(
 ) {
     val spacing = LocalSpacing.current
     val scrollState = rememberScrollState()
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = remember(uiState.expiryDate) {
+            try {
+                LocalDate.parse(uiState.expiryDate).atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+            } catch (_: Exception) {
+                null
+            }
+        }
+    )
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                Button(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val date = Instant.fromEpochMilliseconds(millis)
+                            .toLocalDateTime(TimeZone.UTC).date
+                        onIntent(InventoryDetailIntent.UpdateExpiryDate(date.toString()))
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -109,18 +158,17 @@ fun InventoryDetailContent(
         ) {
             // Item Name
             Text(
-                text = "Item Name",
+                text = "Product Name",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(spacing.sm))
-            OutlinedTextField(
-                value = uiState.name,
-                onValueChange = { onIntent(InventoryDetailIntent.UpdateName(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g., Organic Milk") },
-                shape = MaterialTheme.shapes.medium
+            ProductSelection(
+                name = uiState.name,
+                onNameChange = { onIntent(InventoryDetailIntent.UpdateName(it)) },
+                products = uiState.products,
+                onProductSelected = { onIntent(InventoryDetailIntent.SelectProduct(it.id)) }
             )
 
             Spacer(modifier = Modifier.height(spacing.lg))
@@ -134,7 +182,8 @@ fun InventoryDetailContent(
             )
             Spacer(modifier = Modifier.height(spacing.sm))
             LocationSelection(
-                selectedLocation = uiState.location
+                selectedLocationId = uiState.storageLocationId,
+                locations = uiState.locations
             ) { onIntent(InventoryDetailIntent.SelectLocation(it)) }
 
             Spacer(modifier = Modifier.height(spacing.lg))
@@ -180,19 +229,43 @@ fun InventoryDetailContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(spacing.sm))
+
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+            if (isPressed) {
+                showDatePicker = true
+            }
+
+            val displayDate = remember(uiState.expiryDate) {
+                try {
+                    val date = LocalDate.parse(uiState.expiryDate)
+                    "${date.day.toString().padStart(2, '0')}/${date.monthNumber.toString().padStart(2, '0')}/${date.year}"
+                } catch (_: Exception) {
+                    uiState.expiryDate
+                }
+            }
+
             OutlinedTextField(
-                value = uiState.expiryDate,
-                onValueChange = { onIntent(InventoryDetailIntent.UpdateExpiryDate(it)) },
+                value = displayDate,
+                onValueChange = { },
+                readOnly = true,
+                interactionSource = interactionSource,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("dd/mm/yyyy") },
+                placeholder = { Text("DD/MM/YYYY") },
                 trailingIcon = {
-                    Icon(
-                        Icons.Default.CalendarMonth,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(
+                            Icons.Default.CalendarMonth,
+                            contentDescription = "Select Date",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 },
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                )
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -226,19 +299,92 @@ fun InventoryDetailContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProductSelection(
+    name: String,
+    onNameChange: (String) -> Unit,
+    products: List<com.iqbalfauzi.kitchenstockmobile.domain.model.Product>,
+    onProductSelected: (com.iqbalfauzi.kitchenstockmobile.domain.model.Product) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val filteredProducts = remember(name, products) {
+        if (name.isBlank()) {
+            products.take(5)
+        } else {
+            products.filter { it.name.contains(name, ignoreCase = true) }.take(5)
+        }
+    }
+
+    Box {
+        OutlinedTextField(
+            value = name,
+            onValueChange = {
+                onNameChange(it)
+                expanded = true
+            },
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("e.g., Organic Milk") },
+            trailingIcon = {
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null
+                    )
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+            )
+        )
+        
+        if (expanded && filteredProducts.isNotEmpty()) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth(0.9f)
+            ) {
+                filteredProducts.forEach { product ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(product.name)
+                                Text(
+                                    text = product.unit,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        onClick = {
+                            onProductSelected(product)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LocationSelection(
-    selectedLocation: String,
+    selectedLocationId: String,
+    locations: List<StorageLocationDomain>,
     onLocationSelected: (String) -> Unit
 ) {
     val spacing = LocalSpacing.current
-    val locations = listOf(
-        StorageLocation("Fridge", Icons.Default.Kitchen),
-        StorageLocation("Pantry", Icons.Default.Inventory2),
-        StorageLocation("Freezer", Icons.Default.AcUnit),
-        StorageLocation("Spices", Icons.Default.Coffee)
-    )
+    
+    // Default icons for known locations or a generic one
+    fun getIcon(name: String) = when {
+        name.contains("Fridge", ignoreCase = true) -> Icons.Default.Kitchen
+        name.contains("Pantry", ignoreCase = true) -> Icons.Default.Inventory2
+        name.contains("Freezer", ignoreCase = true) -> Icons.Default.AcUnit
+        else -> Icons.Default.Coffee
+    }
 
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(spacing.sm),
@@ -246,14 +392,14 @@ private fun LocationSelection(
         modifier = Modifier.fillMaxWidth()
     ) {
         locations.forEach { location ->
-            val isSelected = location.name == selectedLocation
+            val isSelected = location.id == selectedLocationId
             FilterChip(
                 selected = isSelected,
-                onClick = { onLocationSelected(location.name) },
+                onClick = { onLocationSelected(location.id) },
                 label = { Text(location.name) },
                 leadingIcon = {
                     Icon(
-                        location.icon,
+                        getIcon(location.name),
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -369,7 +515,12 @@ private fun UnitDropdown(
 fun InventoryDetailContentPreview() {
     KitchenStockTheme {
         InventoryDetailContent(
-            uiState = InventoryDetailUiState(),
+            uiState = InventoryDetailUiState(
+                locations = listOf(
+                    StorageLocationDomain("1", "Fridge"),
+                    StorageLocationDomain("2", "Pantry")
+                )
+            ),
             onIntent = {},
             onBackClick = {}
         )

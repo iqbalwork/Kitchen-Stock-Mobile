@@ -12,5 +12,15 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::PantryViewModel)
     viewModelOf(::ShoppingViewModel)
-    viewModel { params -> InventoryDetailViewModel(itemId = params.getOrNull()) }
+    viewModel { params ->
+        InventoryDetailViewModel(
+            getInventoryItemByIdUseCase = get(),
+            getProductsUseCase = get(),
+            getStorageLocationsUseCase = get(),
+            upsertInventoryItemUseCase = get(),
+            upsertProductUseCase = get(),
+            deleteInventoryItemUseCase = get(),
+            itemId = params.getOrNull()
+        )
+    }
 }

@@ -41,6 +41,7 @@ import com.iqbalfauzi.kitchenstockmobile.presentation.pantry.PantryScreen
 import com.iqbalfauzi.kitchenstockmobile.presentation.shopping.ShoppingScreen
 import com.iqbalfauzi.kitchenstockmobile.ui.navigation.Destination
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.KitchenStockTheme
+import io.github.aakira.napier.Napier
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
@@ -59,34 +60,33 @@ private val navConfig = SavedStateConfiguration {
 @Composable
 @Preview
 fun App() {
-    println("DEBUG: App() Composable called")
+    Napier.d("App() Composable called")
     val authRepository = koinInject<AuthRepository>()
     var isReady by remember { mutableStateOf(false) }
     var hasCheckedAuth by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        println("DEBUG: App LaunchedEffect started")
+        Napier.d("App LaunchedEffect started")
         try {
             val loggedIn = authRepository.isUserLoggedIn()
-            println("DEBUG: App: isUserLoggedIn: $loggedIn")
+            Napier.d("App: isUserLoggedIn: $loggedIn")
             if (loggedIn) {
                 isReady = true
             } else {
-                println("DEBUG: App: signInAnonymously starting")
+                Napier.d("App: signInAnonymously starting")
                 authRepository.signInAnonymously()
-                println("DEBUG: App: signInAnonymously finished")
+                Napier.d("App: signInAnonymously finished")
                 isReady = true
             }
         } catch (e: Exception) {
-            println("DEBUG: App: Auth check/sign-in FAILED: ${e.message}")
-            e.printStackTrace()
+            Napier.e("App: Auth check/sign-in FAILED: ${e.message}", e)
         } finally {
             hasCheckedAuth = true
         }
     }
 
     KitchenStockTheme {
-        println("DEBUG: App: inside KitchenStockTheme, isReady: $isReady, hasCheckedAuth: $hasCheckedAuth")
+        Napier.d("App: inside KitchenStockTheme, isReady: $isReady, hasCheckedAuth: $hasCheckedAuth")
         if (!hasCheckedAuth || !isReady) {
             Box(
                 modifier = Modifier.fillMaxSize().background(Color.White),
@@ -98,9 +98,9 @@ fun App() {
                 }
             }
         } else {
-            println("DEBUG: App: initializing backStack")
+            Napier.d("App: initializing backStack")
             val backStack = rememberNavBackStack(navConfig, Destination.Home)
-            println("DEBUG: App: backStack initialized, last: ${backStack.lastOrNull()}")
+            Napier.d("App: backStack initialized, last: ${backStack.lastOrNull()}")
 
             val showBottomBar = backStack.last() !is Destination.InventoryDetail
 

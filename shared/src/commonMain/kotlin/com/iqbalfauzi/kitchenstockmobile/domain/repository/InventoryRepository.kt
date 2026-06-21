@@ -1,9 +1,17 @@
 package com.iqbalfauzi.kitchenstockmobile.domain.repository
 
 import com.iqbalfauzi.kitchenstockmobile.domain.model.InventoryItem
+import com.iqbalfauzi.kitchenstockmobile.domain.model.Product
+import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation
 import kotlinx.coroutines.flow.Flow
 
 interface InventoryRepository {
     fun getInventoryItems(): Flow<List<InventoryItem>>
+    fun getInventoryItemById(id: String): Flow<InventoryItem?>
+    fun getProducts(): Flow<List<Product>>
+    fun getStorageLocations(): Flow<List<StorageLocation>>
     suspend fun syncInventory()
+    suspend fun upsertInventoryItem(item: InventoryItem)
+    suspend fun upsertProduct(product: Product)
+    suspend fun deleteInventoryItem(id: String)
 }

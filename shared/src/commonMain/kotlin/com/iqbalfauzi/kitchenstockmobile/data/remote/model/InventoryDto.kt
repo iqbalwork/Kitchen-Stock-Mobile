@@ -6,6 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CategoryDto(
     val id: String,
+    @SerialName("user_id")
+    val userId: String? = null,
     val name: String,
     val icon: String? = null
 )
@@ -13,6 +15,8 @@ data class CategoryDto(
 @Serializable
 data class StorageLocationDto(
     val id: String,
+    @SerialName("user_id")
+    val userId: String? = null,
     val name: String,
     val description: String? = null
 )
@@ -20,6 +24,8 @@ data class StorageLocationDto(
 @Serializable
 data class ProductDto(
     val id: String,
+    @SerialName("user_id")
+    val userId: String? = null,
     @SerialName("category_id")
     val categoryId: String? = null,
     val name: String,

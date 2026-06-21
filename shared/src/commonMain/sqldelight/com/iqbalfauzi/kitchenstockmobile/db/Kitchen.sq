@@ -48,6 +48,22 @@ JOIN Product ON Inventory.productId = Product.id
 JOIN StorageLocation ON Inventory.storageLocationId = StorageLocation.id
 LEFT JOIN Category ON Product.categoryId = Category.id;
 
+getInventoryItemById:
+SELECT
+    Inventory.*,
+    Product.name AS productName,
+    Product.unit AS productUnit,
+    Product.imageUrl AS productImageUrl,
+    Product.categoryId AS productCategoryId,
+    StorageLocation.name AS locationName,
+    Category.name AS categoryName,
+    Category.icon AS categoryIcon
+FROM Inventory
+JOIN Product ON Inventory.productId = Product.id
+JOIN StorageLocation ON Inventory.storageLocationId = StorageLocation.id
+LEFT JOIN Category ON Product.categoryId = Category.id
+WHERE Inventory.id = ?;
+
 insertInventory:
 INSERT OR REPLACE INTO Inventory(id, productId, storageLocationId, quantity, expiryDate, updatedAt)
 VALUES (?, ?, ?, ?, ?, ?);
@@ -67,6 +83,9 @@ VALUES (?, ?, ?);
 deleteAllInventory:
 DELETE FROM Inventory;
 
+deleteInventoryById:
+DELETE FROM Inventory WHERE id = ?;
+
 deleteAllProducts:
 DELETE FROM Product;
 
@@ -75,3 +94,9 @@ DELETE FROM Category;
 
 deleteAllStorageLocations:
 DELETE FROM StorageLocation;
+
+getAllProducts:
+SELECT * FROM Product;
+
+getAllStorageLocations:
+SELECT * FROM StorageLocation;
