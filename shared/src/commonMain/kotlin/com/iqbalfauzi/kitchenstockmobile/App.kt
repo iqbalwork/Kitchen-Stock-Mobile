@@ -1,6 +1,7 @@
 package com.iqbalfauzi.kitchenstockmobile
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -44,8 +45,11 @@ fun App() {
         val backStack = rememberNavBackStack(navConfig, Destination.Home)
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
-                NavigationBar {
+                NavigationBar(
+                    windowInsets = WindowInsets(0, 0, 0, 0)
+                ) {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                         label = { Text("Home") },
@@ -69,8 +73,8 @@ fun App() {
                         }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Shopping") },
-                        label = { Text("Shopping") },
+                        icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Shopping List") },
+                        label = { Text("Shopping List") },
                         selected = backStack.last() is Destination.Shopping,
                         onClick = {
                             if (backStack.last() !is Destination.Shopping) {
@@ -82,7 +86,7 @@ fun App() {
                 }
             }
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
+            Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
                 NavDisplay(
                     backStack = backStack,
                     entryProvider = entryProvider {
