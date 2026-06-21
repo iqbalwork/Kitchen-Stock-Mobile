@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iqbalfauzi.kitchenstockmobile.domain.model.InventoryItem
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.DeleteInventoryItemUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetCategoriesUseCase
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetInventoryItemByIdUseCase
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetProductsUseCase
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetStorageLocationsUseCase
@@ -16,15 +17,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class InventoryDetailViewModel(
     private val getInventoryItemByIdUseCase: GetInventoryItemByIdUseCase,
     private val getProductsUseCase: GetProductsUseCase,
     private val getStorageLocationsUseCase: GetStorageLocationsUseCase,
+    private val getCategoriesUseCase: GetCategoriesUseCase,
     private val upsertInventoryItemUseCase: UpsertInventoryItemUseCase,
     private val upsertProductUseCase: UpsertProductUseCase,
     private val deleteInventoryItemUseCase: DeleteInventoryItemUseCase,
@@ -35,13 +37,13 @@ class InventoryDetailViewModel(
     val uiState: StateFlow<InventoryDetailUiState> = _uiState.asStateFlow()
 
     init {
-        loadProductsAndLocations()
+        loadProductsAndLocationsAndCategories()
         if (itemId != null) {
             loadItem(itemId)
         }
     }
 
-    private fun loadProductsAndLocations() {
+    private fun loadProductsAndLocationsAndCategories() {
         viewModelScope.launch {
             getProductsUseCase().collect { products ->
                 _uiState.value = _uiState.value.copy(products = products)
@@ -52,15 +54,22 @@ class InventoryDetailViewModel(
                 _uiState.value = _uiState.value.copy(locations = locations)
             }
         }
+        viewModelScope.launch {
+            getCategoriesUseCase().collect { categories ->
+                _uiState.value = _uiState.value.copy(categories = categories)
+            }
+        }
     }
 
     fun onIntent(intent: InventoryDetailIntent) {
         when (intent) {
             is InventoryDetailIntent.UpdateName -> {
                 val matches = _uiState.value.products.filter { it.name.equals(intent.name, ignoreCase = true) }
+                val exactMatch = matches.find { it.name.equals(intent.name, ignoreCase = true) }
                 _uiState.value = _uiState.value.copy(
                     name = intent.name,
-                    productId = if (matches.size == 1) matches.first().id else ""
+                    productId = exactMatch?.id ?: "",
+                    categoryId = exactMatch?.categoryId ?: _uiState.value.categoryId
                 )
             }
             is InventoryDetailIntent.SelectProduct -> {
@@ -68,8 +77,12 @@ class InventoryDetailViewModel(
                 _uiState.value = _uiState.value.copy(
                     productId = intent.productId,
                     name = product?.name ?: "",
-                    unit = product?.unit ?: "Units"
+                    unit = product?.unit ?: "Units",
+                    categoryId = product?.categoryId ?: _uiState.value.categoryId
                 )
+            }
+            is InventoryDetailIntent.SelectCategory -> {
+                _uiState.value = _uiState.value.copy(categoryId = intent.categoryId)
             }
             is InventoryDetailIntent.SelectLocation -> {
                 val location = _uiState.value.locations.find { it.id == intent.locationId }
@@ -83,7 +96,21 @@ class InventoryDetailViewModel(
             is InventoryDetailIntent.UpdateExpiryDate -> _uiState.value = _uiState.value.copy(expiryDate = intent.date)
             InventoryDetailIntent.Save -> saveItem()
             InventoryDetailIntent.Delete -> deleteItem()
+            InventoryDetailIntent.ResetSuccess -> _uiState.value = _uiState.value.copy(isSuccess = false)
+            InventoryDetailIntent.ResetForm -> resetForm()
         }
+    }
+
+    private fun resetForm() {
+        _uiState.value = _uiState.value.copy(
+            id = null,
+            productId = "",
+            name = "",
+            categoryId = "",
+            quantity = 1,
+            expiryDate = "",
+            isSuccess = false
+        )
     }
 
     private fun loadItem(id: String) {
@@ -95,6 +122,7 @@ class InventoryDetailViewModel(
                         id = item.id,
                         productId = item.productId,
                         name = item.product?.name ?: "",
+                        categoryId = item.product?.categoryId ?: "",
                         storageLocationId = item.storageLocationId,
                         location = item.location?.name ?: "",
                         quantity = item.quantity.toInt(),
@@ -122,7 +150,7 @@ class InventoryDetailViewModel(
                 // Create new product
                 val newProduct = com.iqbalfauzi.kitchenstockmobile.domain.model.Product(
                     id = Uuid.random().toString(),
-                    categoryId = null,
+                    categoryId = currentState.categoryId.ifBlank { null },
                     name = currentState.name,
                     unit = currentState.unit
                 )
@@ -158,10 +186,13 @@ class InventoryDetailViewModel(
 sealed interface InventoryDetailIntent {
     data class UpdateName(val name: String) : InventoryDetailIntent
     data class SelectProduct(val productId: String) : InventoryDetailIntent
+    data class SelectCategory(val categoryId: String) : InventoryDetailIntent
     data class SelectLocation(val locationId: String) : InventoryDetailIntent
     data class UpdateQuantity(val quantity: Int) : InventoryDetailIntent
     data class UpdateUnit(val unit: String) : InventoryDetailIntent
     data class UpdateExpiryDate(val date: String) : InventoryDetailIntent
     data object Save : InventoryDetailIntent
     data object Delete : InventoryDetailIntent
+    data object ResetSuccess : InventoryDetailIntent
+    data object ResetForm : InventoryDetailIntent
 }

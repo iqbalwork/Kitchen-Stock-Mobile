@@ -10,7 +10,7 @@ import org.koin.dsl.module
 
 val viewModelModule = module {
     viewModelOf(::HomeViewModel)
-    viewModelOf(::PantryViewModel)
+    viewModel { PantryViewModel(get(), get(), get()) }
     viewModelOf(::ShoppingViewModel)
     viewModel { params ->
         InventoryDetailViewModel(
@@ -20,7 +20,8 @@ val viewModelModule = module {
             upsertInventoryItemUseCase = get(),
             upsertProductUseCase = get(),
             deleteInventoryItemUseCase = get(),
-            itemId = params.getOrNull()
+            itemId = params.getOrNull(),
+            getCategoriesUseCase = get()
         )
     }
 }

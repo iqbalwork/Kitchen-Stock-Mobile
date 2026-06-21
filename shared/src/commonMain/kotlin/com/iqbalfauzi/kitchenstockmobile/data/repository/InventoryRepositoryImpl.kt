@@ -59,6 +59,13 @@ class InventoryRepositoryImpl(
             .map { list -> list.map { it.toDomain() } }
     }
 
+    override fun getCategories(): Flow<List<com.iqbalfauzi.kitchenstockmobile.domain.model.Category>> {
+        return queries.getAllCategories()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list -> list.map { it.toDomain() } }
+    }
+
     override suspend fun syncInventory() {
         withContext(Dispatchers.IO) {
             try {

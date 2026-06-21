@@ -100,3 +100,6 @@ SELECT * FROM Product;
 
 getAllStorageLocations:
 SELECT * FROM StorageLocation;
+
+getAllCategories:
+SELECT * FROM Category;

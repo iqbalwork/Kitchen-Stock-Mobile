@@ -2,6 +2,7 @@ package com.iqbalfauzi.kitchenstockmobile.presentation.shopping
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iqbalfauzi.kitchenstockmobile.domain.repository.InventoryRepository
 import com.iqbalfauzi.kitchenstockmobile.presentation.shopping.model.ShoppingItem
 import com.iqbalfauzi.kitchenstockmobile.presentation.shopping.model.ShoppingUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,12 +10,25 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ShoppingViewModel : ViewModel() {
+class ShoppingViewModel(
+    private val inventoryRepository: InventoryRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(ShoppingUiState())
     val uiState: StateFlow<ShoppingUiState> = _uiState.asStateFlow()
 
     init {
         loadData()
+        syncData()
+    }
+
+    private fun syncData() {
+        viewModelScope.launch {
+            try {
+                inventoryRepository.syncInventory()
+            } catch (e: Exception) {
+                // Log error
+            }
+        }
     }
 
     fun onIntent(intent: ShoppingIntent) {

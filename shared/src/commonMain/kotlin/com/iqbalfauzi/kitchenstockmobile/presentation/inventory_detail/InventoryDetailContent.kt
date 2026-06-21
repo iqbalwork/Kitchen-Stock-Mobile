@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Inventory2
@@ -67,9 +68,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation as StorageLocationDomain
 import com.iqbalfauzi.kitchenstockmobile.presentation.inventory_detail.model.InventoryDetailUiState
-import com.iqbalfauzi.kitchenstockmobile.presentation.inventory_detail.model.StorageLocation
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.KitchenStockTheme
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
 import kotlinx.datetime.LocalDate
@@ -77,6 +76,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
+import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation as StorageLocationDomain
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -170,6 +170,21 @@ fun InventoryDetailContent(
                 products = uiState.products,
                 onProductSelected = { onIntent(InventoryDetailIntent.SelectProduct(it.id)) }
             )
+
+            Spacer(modifier = Modifier.height(spacing.lg))
+
+            // Category
+            Text(
+                text = "Category",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(spacing.sm))
+            CategorySelection(
+                selectedCategoryId = uiState.categoryId,
+                categories = uiState.categories
+            ) { onIntent(InventoryDetailIntent.SelectCategory(it)) }
 
             Spacer(modifier = Modifier.height(spacing.lg))
 
@@ -272,26 +287,33 @@ fun InventoryDetailContent(
             Spacer(modifier = Modifier.height(spacing.xl))
 
             Button(
-                onClick = { onIntent(InventoryDetailIntent.Save) },
+                onClick = { if (!uiState.isSaving && !uiState.isSuccess) onIntent(InventoryDetailIntent.Save) },
+                enabled = !uiState.isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (uiState.isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = if (uiState.isSuccess) Color.White else MaterialTheme.colorScheme.onPrimaryContainer
+                ),
                 contentPadding = PaddingValues(horizontal = spacing.md)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.Inventory,
+                        if (uiState.isSuccess) Icons.Default.Check else Icons.Default.Inventory,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(modifier = Modifier.width(spacing.sm))
                     Text(
-                        text = if (uiState.id == null) "Add to Inventory" else "Update Item",
+                        text = when {
+                            uiState.isSuccess -> "Added!"
+                            uiState.isSaving -> "Saving..."
+                            uiState.id == null -> "Add to Inventory"
+                            else -> "Update Item"
+                        },
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -365,6 +387,47 @@ private fun ProductSelection(
                     )
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CategorySelection(
+    selectedCategoryId: String,
+    categories: List<com.iqbalfauzi.kitchenstockmobile.domain.model.Category>,
+    onCategorySelected: (String) -> Unit
+) {
+    val spacing = LocalSpacing.current
+
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        categories.forEach { category ->
+            val isSelected = category.id == selectedCategoryId
+            FilterChip(
+                selected = isSelected,
+                onClick = { onCategorySelected(category.id) },
+                label = { Text(category.name) },
+                leadingIcon = {
+                    Text(category.icon ?: "🏷️")
+                },
+                shape = MaterialTheme.shapes.medium,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = Color.White,
+                    containerColor = Color.White,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = MaterialTheme.colorScheme.outlineVariant,
+                    selectedBorderColor = Color.Transparent,
+                    enabled = true,
+                    selected = isSelected
+                )
+            )
         }
     }
 }

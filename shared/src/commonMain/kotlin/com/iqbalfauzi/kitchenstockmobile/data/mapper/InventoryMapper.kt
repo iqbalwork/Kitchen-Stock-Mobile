@@ -4,14 +4,15 @@ import com.iqbalfauzi.kitchenstockmobile.data.remote.model.InventoryDto
 import com.iqbalfauzi.kitchenstockmobile.data.remote.model.ProductDto
 import com.iqbalfauzi.kitchenstockmobile.db.GetInventoryItemById
 import com.iqbalfauzi.kitchenstockmobile.db.GetInventoryWithDetails
-import com.iqbalfauzi.kitchenstockmobile.db.Product as ProductEntity
-import com.iqbalfauzi.kitchenstockmobile.db.StorageLocation as StorageLocationEntity
 import com.iqbalfauzi.kitchenstockmobile.domain.model.Category
 import com.iqbalfauzi.kitchenstockmobile.domain.model.InventoryItem
 import com.iqbalfauzi.kitchenstockmobile.domain.model.Product
 import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
+import kotlin.time.Instant
+import com.iqbalfauzi.kitchenstockmobile.db.Category as CategoryEntity
+import com.iqbalfauzi.kitchenstockmobile.db.Product as ProductEntity
+import com.iqbalfauzi.kitchenstockmobile.db.StorageLocation as StorageLocationEntity
 
 fun GetInventoryWithDetails.toDomain(): InventoryItem {
     return InventoryItem(
@@ -91,6 +92,14 @@ fun StorageLocationEntity.toDomain(): StorageLocation {
         id = id,
         name = name,
         description = description
+    )
+}
+
+fun CategoryEntity.toDomain(): Category {
+    return Category(
+        id = id,
+        name = name,
+        icon = icon
     )
 }
 

@@ -20,6 +20,8 @@ fun InventoryDetailScreen(
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             onBackClick()
+            // Reset form for next time it's opened
+            viewModel.onIntent(InventoryDetailIntent.ResetForm)
         }
     }
 

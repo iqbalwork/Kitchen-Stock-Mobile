@@ -1,5 +1,6 @@
 package com.iqbalfauzi.kitchenstockmobile.domain.repository
 
+import com.iqbalfauzi.kitchenstockmobile.domain.model.Category
 import com.iqbalfauzi.kitchenstockmobile.domain.model.InventoryItem
 import com.iqbalfauzi.kitchenstockmobile.domain.model.Product
 import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation
@@ -10,6 +11,7 @@ interface InventoryRepository {
     fun getInventoryItemById(id: String): Flow<InventoryItem?>
     fun getProducts(): Flow<List<Product>>
     fun getStorageLocations(): Flow<List<StorageLocation>>
+    fun getCategories(): Flow<List<Category>>
     suspend fun syncInventory()
     suspend fun upsertInventoryItem(item: InventoryItem)
     suspend fun upsertProduct(product: Product)
