@@ -23,6 +23,7 @@ class HomeViewModel(
         )
 
     init {
+
         refresh()
     }
 
