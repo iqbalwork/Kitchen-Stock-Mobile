@@ -1,5 +1,8 @@
 package com.iqbalfauzi.kitchenstockmobile
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -99,7 +102,9 @@ fun App() {
                         entry<Destination.Shopping> {
                             ShoppingScreen()
                         }
-                    }
+                    },
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    popTransitionSpec = { fadeIn() togetherWith fadeOut() }
                 )
             }
         }

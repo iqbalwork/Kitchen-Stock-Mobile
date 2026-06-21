@@ -14,6 +14,7 @@ fun PantryScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     PantryContent(
-        uiState = uiState
+        uiState = uiState,
+        onIntent = viewModel::onIntent
     )
 }
