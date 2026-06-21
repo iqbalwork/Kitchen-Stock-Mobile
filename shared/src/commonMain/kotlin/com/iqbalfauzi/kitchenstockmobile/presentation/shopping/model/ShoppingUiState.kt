@@ -1,0 +1,14 @@
+package com.iqbalfauzi.kitchenstockmobile.presentation.shopping.model
+
+data class ShoppingUiState(
+    val searchQuery: String = "",
+    val groupedItems: Map<String, List<ShoppingItem>> = emptyMap(),
+    val recentlyBought: List<String> = emptyList()
+)
+
+data class ShoppingItem(
+    val id: String,
+    val name: String,
+    val quantity: String,
+    val isChecked: Boolean = false
+)

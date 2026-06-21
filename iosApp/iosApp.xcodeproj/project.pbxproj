@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		8A2438610121007F1EB84E0C /* Exceptions for "iosApp" folder in "iosApp" target */ = {
+		8A2438610121007F1EB84E0C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -24,7 +24,7 @@
 		9EAD2C72CB4B7A3D9B8089F6 /* iosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				8A2438610121007F1EB84E0C /* Exceptions for "iosApp" folder in "iosApp" target */,
+				8A2438610121007F1EB84E0C /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -47,6 +47,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		566B86FF5FC44C7D145A5195 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E5FDA3EB52DE8E634B2FD51F /* KitchenStockMobile.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		C93F89F0AB197656D4B6E1AD = {
 			isa = PBXGroup;
 			children = (
@@ -54,14 +62,6 @@
 				9EAD2C72CB4B7A3D9B8089F6 /* iosApp */,
 				566B86FF5FC44C7D145A5195 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		566B86FF5FC44C7D145A5195 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				E5FDA3EB52DE8E634B2FD51F /* KitchenStockMobile.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -299,7 +299,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				DEVELOPMENT_TEAM = YR64R5MUS8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -349,20 +349,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E47C13942D5ECDBE71E9728A /* Build configuration list for PBXProject "iosApp" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				36C2340DB23570D5215C3EAE /* Debug */,
-				4DABA15B4A0D8E853259A554 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		0FE2E63BEF8C30F11FF94771 /* Build configuration list for PBXNativeTarget "iosApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6786F4D49A42D0429FBF119E /* Debug */,
 				A4D63DE5532025F660AC8681 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E47C13942D5ECDBE71E9728A /* Build configuration list for PBXProject "iosApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				36C2340DB23570D5215C3EAE /* Debug */,
+				4DABA15B4A0D8E853259A554 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
