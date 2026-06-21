@@ -9,13 +9,14 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun HomeScreen(
+    onNavigateToDetail: (String?) -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     HomeContent(
         uiState = uiState,
-        onAddClick = { /* Handle add */ },
+        onAddClick = { onNavigateToDetail(null) },
         onNotificationClick = { /* Handle notifications */ },
         onInventoryClick = { /* Handle inventory */ }
     )

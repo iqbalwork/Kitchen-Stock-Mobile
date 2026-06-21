@@ -12,4 +12,7 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object Shopping : Destination
+
+    @Serializable
+    data class InventoryDetail(val id: String? = null) : Destination
 }

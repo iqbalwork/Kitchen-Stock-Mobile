@@ -62,6 +62,7 @@ import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
 fun ShoppingContent(
     uiState: ShoppingUiState,
     onIntent: (ShoppingIntent) -> Unit = {},
+    onAddClick: () -> Unit = {}
 ) {
     val spacing = LocalSpacing.current
 
@@ -91,7 +92,7 @@ fun ShoppingContent(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {  },
+                onClick = onAddClick,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 shape = MaterialTheme.shapes.medium

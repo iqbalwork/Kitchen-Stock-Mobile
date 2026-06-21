@@ -9,11 +9,14 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun ShoppingScreen(
+    onNavigateToDetail: (String?) -> Unit,
     viewModel: ShoppingViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     ShoppingContent(
-        uiState = uiState
+        uiState = uiState,
+        onIntent = viewModel::onIntent,
+        onAddClick = { onNavigateToDetail(null) }
     )
 }

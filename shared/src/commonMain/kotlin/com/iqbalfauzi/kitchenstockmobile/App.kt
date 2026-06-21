@@ -24,6 +24,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.iqbalfauzi.kitchenstockmobile.presentation.home.HomeScreen
+import com.iqbalfauzi.kitchenstockmobile.presentation.inventory_detail.InventoryDetailScreen
 import com.iqbalfauzi.kitchenstockmobile.presentation.pantry.PantryScreen
 import com.iqbalfauzi.kitchenstockmobile.presentation.shopping.ShoppingScreen
 import com.iqbalfauzi.kitchenstockmobile.ui.navigation.Destination
@@ -37,6 +38,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(Destination.Home::class, Destination.Home.serializer())
             subclass(Destination.Pantry::class, Destination.Pantry.serializer())
             subclass(Destination.Shopping::class, Destination.Shopping.serializer())
+            subclass(Destination.InventoryDetail::class, Destination.InventoryDetail.serializer())
         }
     }
 }
@@ -46,46 +48,49 @@ private val navConfig = SavedStateConfiguration {
 fun App() {
     KitchenStockTheme {
         val backStack = rememberNavBackStack(navConfig, Destination.Home)
+        val showBottomBar = backStack.last() !is Destination.InventoryDetail
 
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
-                NavigationBar(
-                    windowInsets = WindowInsets(0, 0, 0, 0)
-                ) {
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                        label = { Text("Home") },
-                        selected = backStack.last() is Destination.Home,
-                        onClick = {
-                            if (backStack.last() !is Destination.Home) {
-                                backStack.clear()
-                                backStack.add(Destination.Home)
+                if (showBottomBar) {
+                    NavigationBar(
+                        windowInsets = WindowInsets(0, 0, 0, 0)
+                    ) {
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                            label = { Text("Home") },
+                            selected = backStack.last() is Destination.Home,
+                            onClick = {
+                                if (backStack.last() !is Destination.Home) {
+                                    backStack.clear()
+                                    backStack.add(Destination.Home)
+                                }
                             }
-                        }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Inventory, contentDescription = "Pantry") },
-                        label = { Text("Pantry") },
-                        selected = backStack.last() is Destination.Pantry,
-                        onClick = {
-                            if (backStack.last() !is Destination.Pantry) {
-                                backStack.clear()
-                                backStack.add(Destination.Pantry)
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.Inventory, contentDescription = "Pantry") },
+                            label = { Text("Pantry") },
+                            selected = backStack.last() is Destination.Pantry,
+                            onClick = {
+                                if (backStack.last() !is Destination.Pantry) {
+                                    backStack.clear()
+                                    backStack.add(Destination.Pantry)
+                                }
                             }
-                        }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Shopping List") },
-                        label = { Text("Shopping List") },
-                        selected = backStack.last() is Destination.Shopping,
-                        onClick = {
-                            if (backStack.last() !is Destination.Shopping) {
-                                backStack.clear()
-                                backStack.add(Destination.Shopping)
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Shopping List") },
+                            label = { Text("Shopping List") },
+                            selected = backStack.last() is Destination.Shopping,
+                            onClick = {
+                                if (backStack.last() !is Destination.Shopping) {
+                                    backStack.clear()
+                                    backStack.add(Destination.Shopping)
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         ) { innerPadding ->
@@ -94,13 +99,19 @@ fun App() {
                     backStack = backStack,
                     entryProvider = entryProvider {
                         entry<Destination.Home> {
-                            HomeScreen()
+                            HomeScreen(onNavigateToDetail = { backStack.add(Destination.InventoryDetail(it)) })
                         }
                         entry<Destination.Pantry> {
-                            PantryScreen()
+                            PantryScreen(onNavigateToDetail = { backStack.add(Destination.InventoryDetail(it)) })
                         }
                         entry<Destination.Shopping> {
-                            ShoppingScreen()
+                            ShoppingScreen(onNavigateToDetail = { backStack.add(Destination.InventoryDetail(it)) })
+                        }
+                        entry<Destination.InventoryDetail> { key ->
+                            InventoryDetailScreen(
+                                id = key.id,
+                                onBackClick = { backStack.removeLastOrNull() }
+                            )
                         }
                     },
                     transitionSpec = { fadeIn() togetherWith fadeOut() },

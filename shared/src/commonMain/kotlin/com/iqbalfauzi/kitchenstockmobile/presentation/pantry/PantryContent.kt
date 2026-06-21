@@ -59,7 +59,8 @@ import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
 @Composable
 fun PantryContent(
     uiState: PantryUiState,
-    onIntent: (PantryIntent) -> Unit = {}
+    onIntent: (PantryIntent) -> Unit = {},
+    onAddClick: () -> Unit = {}
 ) {
     val spacing = LocalSpacing.current
 
@@ -89,7 +90,7 @@ fun PantryContent(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
+                onClick = onAddClick,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 shape = MaterialTheme.shapes.medium

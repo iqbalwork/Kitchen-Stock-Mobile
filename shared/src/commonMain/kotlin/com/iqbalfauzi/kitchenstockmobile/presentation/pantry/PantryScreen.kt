@@ -9,12 +9,14 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun PantryScreen(
+    onNavigateToDetail: (String?) -> Unit,
     viewModel: PantryViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     PantryContent(
         uiState = uiState,
-        onIntent = viewModel::onIntent
+        onIntent = viewModel::onIntent,
+        onAddClick = { onNavigateToDetail(null) }
     )
 }
