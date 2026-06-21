@@ -1,62 +1,41 @@
 package com.iqbalfauzi.kitchenstockmobile.presentation.home
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BakeryDining
-import androidx.compose.material.icons.filled.Eco
-import androidx.compose.material.icons.filled.Egg
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.AttentionItem
-import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.AttentionStatus
+import com.iqbalfauzi.kitchenstockmobile.domain.repository.InventoryRepository
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetHomeSummaryUseCase
 import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.HomeUiState
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(
+    private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
+    private val inventoryRepository: InventoryRepository
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = getHomeSummaryUseCase()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeUiState()
+        )
 
     init {
-        loadData()
+        refresh()
     }
 
     fun onIntent(intent: HomeIntent) {
         when (intent) {
-            HomeIntent.LoadData -> loadData()
-            HomeIntent.Refresh -> loadData()
+            HomeIntent.LoadData -> refresh()
+            HomeIntent.Refresh -> refresh()
         }
     }
 
-    private fun loadData() {
+    private fun refresh() {
         viewModelScope.launch {
-            // Simulated loading
-            _uiState.value = HomeUiState(
-                totalItems = 42,
-                expiringCount = 5,
-                outOfStockCount = 3,
-                attentionItems = listOf(
-                    AttentionItem(
-                        "1", "Whole Milk", "200ml remaining",
-                        AttentionStatus.Expiring("Exp. in 2 Days"), Icons.Default.WaterDrop
-                    ),
-                    AttentionItem(
-                        "2", "Large Eggs", "0 remaining",
-                        AttentionStatus.OutOfStock(), Icons.Default.Egg
-                    ),
-                    AttentionItem(
-                        "3", "Spinach", "1 bag",
-                        AttentionStatus.Expiring("Exp. in 1 Day"), Icons.Default.Eco
-                    ),
-                    AttentionItem(
-                        "4", "Bread", "2 slices",
-                        AttentionStatus.LowStock(), Icons.Default.BakeryDining
-                    )
-                )
-            )
+            inventoryRepository.syncInventory()
         }
     }
 }

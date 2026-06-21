@@ -65,6 +65,7 @@ kotlin {
 
             // Database
             implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.coroutines)
 
             // Backend
             implementation(libs.supabase.postgrest)
@@ -78,6 +79,9 @@ kotlin {
             // Networking & Debugging
             implementation(libs.ktor.client.core)
             implementation(libs.wiretap.ktor)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.napier)
+            implementation(libs.multiplatform.settings)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -101,8 +105,11 @@ buildkonfig {
     packageName = "com.iqbalfauzi.kitchenstockmobile"
 
     defaultConfigs {
-        buildConfigField(STRING, "SUPABASE_URL", "")
-        buildConfigField(STRING, "SUPABASE_ANON_KEY", "")
+        val projectId = project.findProperty("supabase.project.id")?.toString() ?: ""
+        val anonKey = project.findProperty("supabase.anon.key")?.toString() ?: ""
+        
+        buildConfigField(STRING, "SUPABASE_URL", "https://$projectId.supabase.co")
+        buildConfigField(STRING, "SUPABASE_ANON_KEY", anonKey)
     }
 }
 
