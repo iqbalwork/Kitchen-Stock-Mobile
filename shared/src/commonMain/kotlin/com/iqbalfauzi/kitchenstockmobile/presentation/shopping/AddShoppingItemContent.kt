@@ -1,10 +1,11 @@
 package com.iqbalfauzi.kitchenstockmobile.presentation.shopping
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,25 +16,32 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -50,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iqbalfauzi.kitchenstockmobile.domain.model.Category
 import com.iqbalfauzi.kitchenstockmobile.domain.model.Product
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.KitchenStockTheme
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
@@ -58,12 +67,11 @@ import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
 @Composable
 fun AddShoppingItemContent(
     uiState: AddShoppingItemUiState,
-    onProductSelected: (Product?) -> Unit,
-    onQuantityChanged: (String) -> Unit,
-    onAddClick: () -> Unit,
+    onIntent: (AddShoppingItemIntent) -> Unit,
     onBackClick: () -> Unit
 ) {
     val spacing = LocalSpacing.current
+    val scrollState = rememberScrollState()
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -81,6 +89,11 @@ fun AddShoppingItemContent(
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    IconButton(onClick = { }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    }
                 }
             )
         }
@@ -89,61 +102,78 @@ fun AddShoppingItemContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(spacing.md),
-            verticalArrangement = Arrangement.spacedBy(spacing.lg)
+                .padding(spacing.md)
+                .verticalScroll(scrollState)
         ) {
-            // Product Selection Section
-            Column {
-                Text(
-                    text = "Select Product",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(spacing.sm))
-                ProductDropdownSelector(
-                    selectedProduct = uiState.selectedProduct,
-                    products = uiState.products,
-                    onProductSelected = onProductSelected
-                )
-            }
+            // Product Name
+            Text(
+                text = "Product Name",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(spacing.sm))
+            ProductSelection(
+                name = uiState.name,
+                onNameChange = { onIntent(AddShoppingItemIntent.UpdateName(it)) },
+                products = uiState.products,
+                onProductSelected = { onIntent(AddShoppingItemIntent.SelectProduct(it.id)) }
+            )
 
-            // Quantity Selection Section
-            Column {
-                Text(
-                    text = "Quantity",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(spacing.sm))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val currentQty = uiState.quantity.toDoubleOrNull() ?: 1.0
-                    QuantityStepper(
-                        quantity = currentQty,
-                        onQuantityChanged = { onQuantityChanged(it.toString()) }
+            Spacer(modifier = Modifier.height(spacing.lg))
+
+            // Category
+            Text(
+                text = "Category",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(spacing.sm))
+            CategorySelection(
+                selectedCategoryId = uiState.categoryId,
+                categories = uiState.categories
+            ) { onIntent(AddShoppingItemIntent.SelectCategory(it)) }
+
+            Spacer(modifier = Modifier.height(spacing.lg))
+
+            // Quantity & Unit
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Quantity",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.width(spacing.md))
-                    uiState.selectedProduct?.let { product ->
-                        Text(
-                            text = product.unit,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(spacing.sm))
+                    QuantityStepper(
+                        quantity = uiState.quantity,
+                        onQuantityChanged = { onIntent(AddShoppingItemIntent.UpdateQuantity(it)) }
+                    )
+                }
+                Spacer(modifier = Modifier.width(spacing.md))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Unit",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(spacing.sm))
+                    UnitDropdown(
+                        selectedUnit = uiState.unit,
+                        onUnitSelected = { onIntent(AddShoppingItemIntent.UpdateUnit(it)) }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(spacing.xl))
 
-            // Add Button
             Button(
-                onClick = { if (!uiState.isLoading && !uiState.isSuccess) onAddClick() },
-                enabled = !uiState.isLoading && uiState.selectedProduct != null,
+                onClick = { if (!uiState.isSaving && !uiState.isSuccess) onIntent(AddShoppingItemIntent.Save) },
+                enabled = !uiState.isSaving && uiState.name.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -163,7 +193,7 @@ fun AddShoppingItemContent(
                     Text(
                         text = when {
                             uiState.isSuccess -> "Added!"
-                            uiState.isLoading -> "Adding..."
+                            uiState.isSaving -> "Adding..."
                             else -> "Add to Shopping List"
                         },
                         style = MaterialTheme.typography.titleMedium,
@@ -175,51 +205,39 @@ fun AddShoppingItemContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProductDropdownSelector(
-    selectedProduct: Product?,
+private fun ProductSelection(
+    name: String,
+    onNameChange: (String) -> Unit,
     products: List<Product>,
-    onProductSelected: (Product?) -> Unit
+    onProductSelected: (Product) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var searchText by remember { mutableStateOf("") }
-
-    val filteredProducts = remember(searchText, products) {
-        if (searchText.isBlank()) {
-            products
+    val filteredProducts = remember(name, products) {
+        if (name.isBlank()) {
+            products.take(5)
         } else {
-            products.filter { it.name.contains(searchText, ignoreCase = true) }
+            products.filter { it.name.contains(name, ignoreCase = true) }.take(5)
         }
     }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    Box {
         OutlinedTextField(
-            value = selectedProduct?.name ?: searchText,
+            value = name,
             onValueChange = {
-                if (selectedProduct == null) {
-                    searchText = it
-                    expanded = true
-                }
+                onNameChange(it)
+                expanded = true
             },
-            readOnly = selectedProduct != null,
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Search product...") },
+            placeholder = { Text("e.g., Organic Milk") },
             trailingIcon = {
-                if (selectedProduct != null) {
-                    IconButton(onClick = {
-                        searchText = ""
-                        onProductSelected(null)
-                    }) {
-                        Icon(Icons.Default.Remove, contentDescription = "Clear Selection")
-                    }
-                } else {
-                    IconButton(onClick = { expanded = !expanded }) {
-                        Icon(
-                            if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = null
-                        )
-                    }
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null
+                    )
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
@@ -238,9 +256,9 @@ private fun ProductDropdownSelector(
                     DropdownMenuItem(
                         text = {
                             Column {
-                                Text(product.name, fontWeight = FontWeight.Bold)
+                                Text(product.name)
                                 Text(
-                                    text = "Unit: ${product.unit}",
+                                    text = product.unit,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -249,7 +267,6 @@ private fun ProductDropdownSelector(
                         onClick = {
                             onProductSelected(product)
                             expanded = false
-                            searchText = ""
                         }
                     )
                 }
@@ -258,6 +275,46 @@ private fun ProductDropdownSelector(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CategorySelection(
+    selectedCategoryId: String,
+    categories: List<Category>,
+    onCategorySelected: (String) -> Unit
+) {
+    val spacing = LocalSpacing.current
+
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        categories.forEach { category ->
+            val isSelected = category.id == selectedCategoryId
+            FilterChip(
+                selected = isSelected,
+                onClick = { onCategorySelected(category.id) },
+                label = { Text(category.name) },
+                leadingIcon = {
+                    Text(category.icon ?: "🏷️")
+                },
+                shape = MaterialTheme.shapes.medium,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = Color.White,
+                    containerColor = Color.White,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = MaterialTheme.colorScheme.outlineVariant,
+                    selectedBorderColor = Color.Transparent,
+                    enabled = true,
+                    selected = isSelected
+                )
+            )
+        }
+    }
+}
 
 @Composable
 private fun QuantityStepper(
@@ -266,12 +323,13 @@ private fun QuantityStepper(
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        shape = MaterialTheme.shapes.medium
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier.padding(4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             FilledIconButton(
                 onClick = { if (quantity > 1.0) onQuantityChanged(quantity - 1.0) },
@@ -298,6 +356,53 @@ private fun QuantityStepper(
     }
 }
 
+@Composable
+private fun UnitDropdown(
+    selectedUnit: String,
+    onUnitSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val units = listOf("Units", "kg", "g", "L", "ml", "Packs", "butir")
+
+    Box {
+        OutlinedCard(
+            onClick = { expanded = true },
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = selectedUnit, style = MaterialTheme.typography.bodyLarge)
+                Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(0.45f)
+        ) {
+            units.forEach { unit ->
+                DropdownMenuItem(
+                    text = { Text(unit) },
+                    onClick = {
+                        onUnitSelected(unit)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun AddShoppingItemContentPreview() {
@@ -309,12 +414,9 @@ fun AddShoppingItemContentPreview() {
     KitchenStockTheme {
         AddShoppingItemContent(
             uiState = AddShoppingItemUiState(
-                products = dummyProducts,
-                selectedProduct = dummyProducts.first()
+                products = dummyProducts
             ),
-            onProductSelected = {},
-            onQuantityChanged = {},
-            onAddClick = {},
+            onIntent = {},
             onBackClick = {}
         )
     }

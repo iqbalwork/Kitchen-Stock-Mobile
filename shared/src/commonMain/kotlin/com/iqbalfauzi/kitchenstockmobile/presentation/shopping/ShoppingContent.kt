@@ -43,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,70 +102,76 @@ fun ShoppingContent(
             }
         }
     ) { padding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { onIntent(ShoppingIntent.Refresh) },
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(spacing.md),
-            verticalArrangement = Arrangement.spacedBy(spacing.md)
+                .padding(padding)
         ) {
-            item {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { onIntent(ShoppingIntent.UpdateSearch(it)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Add or search items...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    shape = CircleShape,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                    )
-                )
-            }
-
-            uiState.groupedItems.forEach { (category, items) ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(spacing.md),
+                verticalArrangement = Arrangement.spacedBy(spacing.md)
+            ) {
                 item {
-                    Text(
-                        text = category,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = spacing.sm)
+                    OutlinedTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = { onIntent(ShoppingIntent.UpdateSearch(it)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Add or search items...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        shape = CircleShape,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
                     )
                 }
 
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        shape = MaterialTheme.shapes.large,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    ) {
-                        Column {
-                            items.forEachIndexed { index, item ->
-                                ShoppingListItem(
-                                    item = item,
-                                    onToggle = { onIntent(ShoppingIntent.ToggleItem(item.id)) },
-                                    onAddInventory = { onIntent(ShoppingIntent.AddItemToInventory(item.id)) }
-                                )
-                                if (index < (items.size - 1)) {
-                                    HorizontalDivider(
-                                        modifier = Modifier.padding(horizontal = spacing.md),
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                uiState.groupedItems.forEach { (category, items) ->
+                    item {
+                        Text(
+                            text = category,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = spacing.sm)
+                        )
+                    }
+
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = MaterialTheme.shapes.large,
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        ) {
+                            Column {
+                                items.forEachIndexed { index, item ->
+                                    ShoppingListItem(
+                                        item = item,
+                                        onToggle = { onIntent(ShoppingIntent.ToggleItem(item.id)) },
+                                        onAddInventory = { onIntent(ShoppingIntent.AddItemToInventory(item.id)) }
                                     )
+                                    if (index < (items.size - 1)) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(horizontal = spacing.md),
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            item {
-                RecentlyBoughtSection(
-                    items = uiState.recentlyBought,
-                    spacing = spacing
-                )
+                item {
+                    RecentlyBoughtSection(
+                        items = uiState.recentlyBought,
+                        spacing = spacing
+                    )
+                }
             }
         }
     }

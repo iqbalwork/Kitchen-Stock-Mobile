@@ -40,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation
 import com.iqbalfauzi.kitchenstockmobile.presentation.pantry.model.ExpiryStatus
 import com.iqbalfauzi.kitchenstockmobile.presentation.pantry.model.PantryItem
 import com.iqbalfauzi.kitchenstockmobile.presentation.pantry.model.PantryUiState
@@ -60,7 +62,8 @@ import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
 fun PantryContent(
     uiState: PantryUiState,
     onIntent: (PantryIntent) -> Unit = {},
-    onAddClick: () -> Unit = {}
+    onAddClick: () -> Unit = {},
+    onItemClick: (String) -> Unit = {}
 ) {
     val spacing = LocalSpacing.current
 
@@ -106,29 +109,36 @@ fun PantryContent(
         ) {
             CategoryFilterRow(
                 categories = uiState.categories,
-                selectedCategory = uiState.selectedCategory,
+                selectedCategoryId = uiState.selectedCategoryId,
                 onCategorySelected = { onIntent(PantryIntent.SelectCategory(it)) }
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(spacing.md),
-                verticalArrangement = Arrangement.spacedBy(spacing.md)
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { onIntent(PantryIntent.Refresh) },
+                modifier = Modifier.fillMaxSize()
             ) {
-                uiState.groupedItems.forEach { (location, items) ->
-                    item(key = location) {
-                        Text(
-                            text = location,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = spacing.sm)
-                        )
-                    }
-                    items(items, key = { it.id }) { item ->
-                        PantryItemCard(
-                            item = item,
-                            onUpdateQuantity = { onIntent(PantryIntent.UpdateQuantity(item.id, it)) }
-                        )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(spacing.md)
+                ) {
+                    uiState.groupedItems.forEach { (location, items) ->
+                        item(key = location) {
+                            Text(
+                                text = location,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = spacing.sm)
+                            )
+                        }
+                        items(items, key = { it.id }) { item ->
+                            PantryItemCard(
+                                item = item,
+                                onUpdateQuantity = { onIntent(PantryIntent.UpdateQuantity(item.id, it)) },
+                                onClick = { onItemClick(item.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -138,9 +148,9 @@ fun PantryContent(
 
 @Composable
 private fun CategoryFilterRow(
-    categories: List<String>,
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit
+    categories: List<StorageLocation>,
+    selectedCategoryId: String?,
+    onCategorySelected: (String?) -> Unit
 ) {
     val spacing = LocalSpacing.current
     LazyRow(
@@ -148,16 +158,29 @@ private fun CategoryFilterRow(
         horizontalArrangement = Arrangement.spacedBy(spacing.sm),
         modifier = Modifier.padding(vertical = spacing.sm)
     ) {
-        items(categories) { category ->
-            val isSelected = category == selectedCategory
+        item {
             FilterChip(
-                selected = isSelected,
-                onClick = { onCategorySelected(category) },
-                label = { Text(category) },
+                selected = selectedCategoryId == null,
+                onClick = { onCategorySelected(null) },
+                label = { Text("All") },
                 shape = CircleShape,
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = Color.White
+                ),
+                border = null
+            )
+        }
+        items(categories) { category ->
+            val isSelected = category.id == selectedCategoryId
+            FilterChip(
+                selected = isSelected,
+                onClick = { onCategorySelected(category.id) },
+                label = { Text(category.name) },
+                shape = CircleShape,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = Color.White
                 ),
                 border = null
             )
@@ -168,11 +191,13 @@ private fun CategoryFilterRow(
 @Composable
 private fun PantryItemCard(
     item: PantryItem,
-    onUpdateQuantity: (Int) -> Unit
+    onUpdateQuantity: (Int) -> Unit,
+    onClick: () -> Unit
 ) {
     val spacing = LocalSpacing.current
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = MaterialTheme.shapes.large,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)

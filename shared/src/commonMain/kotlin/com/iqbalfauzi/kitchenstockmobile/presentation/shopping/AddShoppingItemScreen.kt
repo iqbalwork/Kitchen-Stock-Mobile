@@ -18,15 +18,13 @@ fun AddShoppingItemScreen(
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             onBackClick()
-            viewModel.resetState()
+            viewModel.onIntent(AddShoppingItemIntent.ResetSuccess)
         }
     }
 
     AddShoppingItemContent(
         uiState = uiState,
-        onProductSelected = viewModel::selectProduct,
-        onQuantityChanged = viewModel::updateQuantity,
-        onAddClick = viewModel::addShoppingItem,
+        onIntent = viewModel::onIntent,
         onBackClick = onBackClick
     )
 }

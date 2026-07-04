@@ -17,6 +17,7 @@ fun PantryScreen(
     PantryContent(
         uiState = uiState,
         onIntent = viewModel::onIntent,
-        onAddClick = { onNavigateToDetail(null) }
+        onAddClick = { onNavigateToDetail(null) },
+        onItemClick = { onNavigateToDetail(it) }
     )
 }

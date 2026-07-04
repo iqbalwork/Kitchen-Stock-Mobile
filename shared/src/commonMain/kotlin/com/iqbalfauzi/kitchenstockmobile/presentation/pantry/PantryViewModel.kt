@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.iqbalfauzi.kitchenstockmobile.domain.model.InventoryItem
 import com.iqbalfauzi.kitchenstockmobile.domain.repository.InventoryRepository
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetInventoryItemsUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetStorageLocationsUseCase
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.UpsertInventoryItemUseCase
 import com.iqbalfauzi.kitchenstockmobile.presentation.pantry.model.ExpiryStatus
 import com.iqbalfauzi.kitchenstockmobile.presentation.pantry.model.PantryItem
@@ -26,6 +27,7 @@ import kotlin.time.Clock
 
 class PantryViewModel(
     private val getInventoryItemsUseCase: GetInventoryItemsUseCase,
+    private val getStorageLocationsUseCase: GetStorageLocationsUseCase,
     private val upsertInventoryItemUseCase: UpsertInventoryItemUseCase,
     private val inventoryRepository: InventoryRepository
 ) : ViewModel() {
@@ -35,26 +37,30 @@ class PantryViewModel(
     private var allItems: List<InventoryItem> = emptyList()
 
     init {
-        observePantryItems()
+        observeData()
         syncData()
     }
 
-    private fun observePantryItems() {
+    private fun observeData() {
         viewModelScope.launch {
             combine(
                 getInventoryItemsUseCase(),
+                getStorageLocationsUseCase(),
                 _uiState
-            ) { items, state ->
+            ) { items, locations, state ->
                 allItems = items
-                val filteredItems = if (state.selectedCategory == "All") {
+                
+                val filteredItems = if (state.selectedCategoryId == null) {
                     items
                 } else {
-                    items.filter { it.location?.name?.equals(state.selectedCategory, ignoreCase = true) == true }
+                    items.filter { it.storageLocationId == state.selectedCategoryId }
                 }
                 
-                filteredItems.map { it.toPantryItem() }
-            }.collect { pantryItems ->
+                Triple(filteredItems.map { it.toPantryItem() }, locations, state.selectedCategoryId)
+            }.collect { (pantryItems, locations, selectedId) ->
                 _uiState.value = _uiState.value.copy(
+                    categories = locations,
+                    selectedCategoryId = selectedId,
                     groupedItems = pantryItems.groupBy { it.location.uppercase() }
                 )
             }
@@ -66,7 +72,6 @@ class PantryViewModel(
             try {
                 inventoryRepository.syncInventory()
             } catch (_: Exception) {
-                // Log error
             }
         }
     }
@@ -74,10 +79,23 @@ class PantryViewModel(
     fun onIntent(intent: PantryIntent) {
         when (intent) {
             is PantryIntent.SelectCategory -> {
-                _uiState.value = _uiState.value.copy(selectedCategory = intent.category)
+                _uiState.value = _uiState.value.copy(selectedCategoryId = intent.categoryId)
             }
             is PantryIntent.UpdateQuantity -> {
                 updateQuantity(intent.id, intent.newQuantity)
+            }
+            PantryIntent.Refresh -> refresh()
+        }
+    }
+
+    private fun refresh() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            try {
+                inventoryRepository.syncInventory()
+            } catch (_: Exception) {
+            } finally {
+                _uiState.value = _uiState.value.copy(isRefreshing = false)
             }
         }
     }
@@ -124,6 +142,7 @@ class PantryViewModel(
 }
 
 sealed interface PantryIntent {
-    data class SelectCategory(val category: String) : PantryIntent
+    data class SelectCategory(val categoryId: String?) : PantryIntent
     data class UpdateQuantity(val id: String, val newQuantity: Int) : PantryIntent
+    data object Refresh : PantryIntent
 }

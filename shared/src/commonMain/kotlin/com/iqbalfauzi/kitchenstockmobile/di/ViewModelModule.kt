@@ -14,7 +14,7 @@ import org.koin.dsl.module
 val viewModelModule = module {
     viewModelOf(::LoginViewModel)
     viewModelOf(::HomeViewModel)
-    viewModel { PantryViewModel(get(), get(), get()) }
+    viewModelOf(::PantryViewModel)
     viewModelOf(::ShoppingViewModel)
     viewModelOf(::AddShoppingItemViewModel)
     viewModelOf(::ProfileViewModel)

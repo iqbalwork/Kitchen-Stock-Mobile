@@ -2,10 +2,13 @@ package com.iqbalfauzi.kitchenstockmobile.presentation.pantry.model
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
+import com.iqbalfauzi.kitchenstockmobile.domain.model.StorageLocation
+
 data class PantryUiState(
-    val categories: List<String> = listOf("All", "Fridge", "Pantry", "Freezer", "Spices"),
-    val selectedCategory: String = "All",
-    val groupedItems: Map<String, List<PantryItem>> = emptyMap()
+    val categories: List<StorageLocation> = emptyList(),
+    val selectedCategoryId: String? = null,
+    val groupedItems: Map<String, List<PantryItem>> = emptyMap(),
+    val isRefreshing: Boolean = false
 )
 
 data class PantryItem(

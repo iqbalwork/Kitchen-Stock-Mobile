@@ -78,6 +78,7 @@ class InventoryDetailViewModel(
                     productId = intent.productId,
                     name = product?.name ?: "",
                     unit = product?.unit ?: "Units",
+                    minStockLevel = product?.minStockLevel ?: 0.0,
                     categoryId = product?.categoryId ?: _uiState.value.categoryId
                 )
             }
@@ -92,6 +93,7 @@ class InventoryDetailViewModel(
                 )
             }
             is InventoryDetailIntent.UpdateQuantity -> _uiState.value = _uiState.value.copy(quantity = intent.quantity)
+            is InventoryDetailIntent.UpdateMinStockLevel -> _uiState.value = _uiState.value.copy(minStockLevel = intent.minStockLevel)
             is InventoryDetailIntent.UpdateUnit -> _uiState.value = _uiState.value.copy(unit = intent.unit)
             is InventoryDetailIntent.UpdateExpiryDate -> _uiState.value = _uiState.value.copy(expiryDate = intent.date)
             InventoryDetailIntent.Save -> saveItem()
@@ -107,7 +109,7 @@ class InventoryDetailViewModel(
             productId = "",
             name = "",
             categoryId = "",
-            quantity = 1,
+            quantity = 1.0,
             expiryDate = "",
             isSuccess = false
         )
@@ -125,8 +127,9 @@ class InventoryDetailViewModel(
                         categoryId = item.product?.categoryId ?: "",
                         storageLocationId = item.storageLocationId,
                         location = item.location?.name ?: "",
-                        quantity = item.quantity.toInt(),
+                        quantity = item.quantity,
                         unit = item.product?.unit ?: "Units",
+                        minStockLevel = item.product?.minStockLevel ?: 0.0,
                         expiryDate = item.expiryDate?.toString() ?: "",
                         isLoading = false
                     )
@@ -146,16 +149,17 @@ class InventoryDetailViewModel(
             _uiState.value = currentState.copy(isSaving = true)
 
             var productId = currentState.productId
-            if (productId.isBlank()) {
-                // Create new product
-                val newProduct = com.iqbalfauzi.kitchenstockmobile.domain.model.Product(
-                    id = Uuid.random().toString(),
+            if (productId.isBlank() || currentState.minStockLevel != currentState.products.find { it.id == productId }?.minStockLevel) {
+                // Upsert product if it's new OR if minStockLevel changed (in case we want to update product details)
+                val productToUpsert = com.iqbalfauzi.kitchenstockmobile.domain.model.Product(
+                    id = if (productId.isBlank()) Uuid.random().toString() else productId,
                     categoryId = currentState.categoryId.ifBlank { null },
                     name = currentState.name,
-                    unit = currentState.unit
+                    unit = currentState.unit,
+                    minStockLevel = currentState.minStockLevel
                 )
-                upsertProductUseCase(newProduct)
-                productId = newProduct.id
+                upsertProductUseCase(productToUpsert)
+                productId = productToUpsert.id
             }
             
             val item = InventoryItem(
@@ -188,7 +192,8 @@ sealed interface InventoryDetailIntent {
     data class SelectProduct(val productId: String) : InventoryDetailIntent
     data class SelectCategory(val categoryId: String) : InventoryDetailIntent
     data class SelectLocation(val locationId: String) : InventoryDetailIntent
-    data class UpdateQuantity(val quantity: Int) : InventoryDetailIntent
+    data class UpdateQuantity(val quantity: Double) : InventoryDetailIntent
+    data class UpdateMinStockLevel(val minStockLevel: Double) : InventoryDetailIntent
     data class UpdateUnit(val unit: String) : InventoryDetailIntent
     data class UpdateExpiryDate(val date: String) : InventoryDetailIntent
     data object Save : InventoryDetailIntent

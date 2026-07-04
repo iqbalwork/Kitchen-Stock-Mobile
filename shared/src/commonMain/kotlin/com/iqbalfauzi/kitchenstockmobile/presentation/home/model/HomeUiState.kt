@@ -10,7 +10,8 @@ data class HomeUiState(
     val outOfStockCount: Int = 0,
     val attentionItems: List<AttentionItem> = emptyList(),
     val products: List<Product> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false
 )
 
 data class AttentionItem(

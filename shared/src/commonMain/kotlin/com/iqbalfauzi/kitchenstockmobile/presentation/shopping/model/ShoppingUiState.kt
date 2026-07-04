@@ -3,7 +3,8 @@ package com.iqbalfauzi.kitchenstockmobile.presentation.shopping.model
 data class ShoppingUiState(
     val searchQuery: String = "",
     val groupedItems: Map<String, List<ShoppingItem>> = emptyMap(),
-    val recentlyBought: List<String> = emptyList()
+    val recentlyBought: List<String> = emptyList(),
+    val isRefreshing: Boolean = false
 )
 
 data class ShoppingItem(

@@ -18,6 +18,7 @@ fun HomeScreen(
         uiState = uiState,
         onAddClick = { onNavigateToDetail(null) },
         onNotificationClick = { /* Handle notifications */ },
-        onInventoryClick = { /* Handle inventory */ }
+        onInventoryClick = { /* Handle inventory */ },
+        onIntent = viewModel::onIntent
     )
 }

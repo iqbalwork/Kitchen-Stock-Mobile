@@ -39,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,7 +114,8 @@ fun HomeContent(
     uiState: HomeUiState,
     onAddClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
-    onInventoryClick: () -> Unit = {}
+    onInventoryClick: () -> Unit = {},
+    onIntent: (HomeIntent) -> Unit = {}
 ) {
     val spacing = LocalSpacing.current
 
@@ -152,46 +154,52 @@ fun HomeContent(
             }
         }
     ) { padding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { onIntent(HomeIntent.Refresh) },
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(
-                start = spacing.md,
-                top = spacing.md,
-                end = spacing.md,
-                bottom = 0.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(spacing.md)
+                .padding(padding)
         ) {
-            item {
-                SummarySection(uiState)
-            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = spacing.md,
+                    top = spacing.md,
+                    end = spacing.md,
+                    bottom = spacing.md
+                ),
+                verticalArrangement = Arrangement.spacedBy(spacing.md)
+            ) {
+                item {
+                    SummarySection(uiState)
+                }
 
-            item {
-                Text(
-                    text = "Needs Attention",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = spacing.sm)
-                )
-            }
+                item {
+                    Text(
+                        text = "Needs Attention",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = spacing.sm)
+                    )
+                }
 
-            items(uiState.attentionItems) { item ->
-                AttentionListItem(item)
-            }
+                items(uiState.attentionItems) { item ->
+                    AttentionListItem(item)
+                }
 
-            item {
-                Text(
-                    text = "Your Products",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = spacing.sm)
-                )
-            }
+                item {
+                    Text(
+                        text = "Your Products",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = spacing.sm)
+                    )
+                }
 
-            items(uiState.products) { product ->
-                ProductListItem(product)
+                items(uiState.products) { product ->
+                    ProductListItem(product)
+                }
             }
         }
     }

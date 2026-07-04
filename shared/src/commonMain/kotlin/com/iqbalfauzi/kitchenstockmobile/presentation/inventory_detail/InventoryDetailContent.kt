@@ -236,6 +236,21 @@ fun InventoryDetailContent(
 
             Spacer(modifier = Modifier.height(spacing.lg))
 
+            // Min Stock Level
+            Text(
+                text = "Min Stock Level",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(spacing.sm))
+            MinStockStepper(
+                minStock = uiState.minStockLevel,
+                onMinStockChanged = { onIntent(InventoryDetailIntent.UpdateMinStockLevel(it)) }
+            )
+
+            Spacer(modifier = Modifier.height(spacing.lg))
+
             // Expiry Date
             Text(
                 text = "Expiry Date (Optional)",
@@ -488,8 +503,8 @@ private fun LocationSelection(
 
 @Composable
 private fun QuantityStepper(
-    quantity: Int,
-    onQuantityChanged: (Int) -> Unit
+    quantity: Double,
+    onQuantityChanged: (Double) -> Unit
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
@@ -502,7 +517,7 @@ private fun QuantityStepper(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             FilledIconButton(
-                onClick = { if (quantity > 1) onQuantityChanged(quantity - 1) },
+                onClick = { if (quantity > 1.0) onQuantityChanged(quantity - 1.0) },
                 colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White),
                 modifier = Modifier.size(40.dp),
                 shape = MaterialTheme.shapes.small
@@ -510,12 +525,12 @@ private fun QuantityStepper(
                 Icon(Icons.Default.Remove, contentDescription = "Decrease")
             }
             Text(
-                text = quantity.toString(),
+                text = if (quantity % 1.0 == 0.0) quantity.toInt().toString() else quantity.toString(),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             FilledIconButton(
-                onClick = { onQuantityChanged(quantity + 1) },
+                onClick = { onQuantityChanged(quantity + 1.0) },
                 colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White),
                 modifier = Modifier.size(40.dp),
                 shape = MaterialTheme.shapes.small
@@ -532,7 +547,7 @@ private fun UnitDropdown(
     onUnitSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val units = listOf("Units", "kg", "g", "L", "ml", "Packs")
+    val units = listOf("Units", "kg", "g", "L", "ml", "Packs", "butir")
 
     Box {
         OutlinedCard(
@@ -568,6 +583,46 @@ private fun UnitDropdown(
                         expanded = false
                     }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MinStockStepper(
+    minStock: Double,
+    onMinStockChanged: (Double) -> Unit
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            FilledIconButton(
+                onClick = { if (minStock > 0.0) onMinStockChanged(minStock - 1.0) },
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White),
+                modifier = Modifier.size(40.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Icon(Icons.Default.Remove, contentDescription = "Decrease")
+            }
+            Text(
+                text = if (minStock % 1.0 == 0.0) minStock.toInt().toString() else minStock.toString(),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            FilledIconButton(
+                onClick = { onMinStockChanged(minStock + 1.0) },
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White),
+                modifier = Modifier.size(40.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Increase")
             }
         }
     }
