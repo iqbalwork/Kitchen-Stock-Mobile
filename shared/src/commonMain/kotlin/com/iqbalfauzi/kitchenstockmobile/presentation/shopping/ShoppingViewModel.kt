@@ -2,29 +2,66 @@ package com.iqbalfauzi.kitchenstockmobile.presentation.shopping
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.iqbalfauzi.kitchenstockmobile.domain.repository.InventoryRepository
+import com.iqbalfauzi.kitchenstockmobile.domain.repository.ShoppingRepository
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetShoppingListUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.ToggleShoppingItemUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.DeleteShoppingItemUseCase
 import com.iqbalfauzi.kitchenstockmobile.presentation.shopping.model.ShoppingItem
 import com.iqbalfauzi.kitchenstockmobile.presentation.shopping.model.ShoppingUiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ShoppingViewModel(
-    private val inventoryRepository: InventoryRepository
+    private val getShoppingListUseCase: GetShoppingListUseCase,
+    private val toggleShoppingItemUseCase: ToggleShoppingItemUseCase,
+    private val deleteShoppingItemUseCase: DeleteShoppingItemUseCase,
+    private val shoppingRepository: ShoppingRepository
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(ShoppingUiState())
-    val uiState: StateFlow<ShoppingUiState> = _uiState.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+
+    val uiState: StateFlow<ShoppingUiState> = combine(
+        getShoppingListUseCase(),
+        _searchQuery
+    ) { items, query ->
+        val filteredItems = if (query.isBlank()) {
+            items
+        } else {
+            items.filter { it.product?.name?.contains(query, ignoreCase = true) == true }
+        }
+
+        val grouped = filteredItems.map { item ->
+            ShoppingItem(
+                id = item.id,
+                name = item.product?.name ?: "Unknown Product",
+                quantity = "${item.quantity} ${item.product?.unit ?: ""}",
+                isChecked = item.isBought
+            ) to (item.product?.category?.name ?: "Uncategorized")
+        }.groupBy({ it.second }, { it.first })
+
+        ShoppingUiState(
+            searchQuery = query,
+            groupedItems = grouped,
+            recentlyBought = listOf("Eggs", "Bread", "Coffee Beans")
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ShoppingUiState()
+    )
 
     init {
-        loadData()
         syncData()
     }
 
     private fun syncData() {
         viewModelScope.launch {
             try {
-                inventoryRepository.syncInventory()
+                shoppingRepository.syncShoppingList()
             } catch (e: Exception) {
                 // Log error
             }
@@ -35,49 +72,23 @@ class ShoppingViewModel(
         when (intent) {
             is ShoppingIntent.ToggleItem -> toggleItem(intent.id)
             is ShoppingIntent.UpdateSearch -> {
-                _uiState.value = _uiState.value.copy(searchQuery = intent.query)
+                _searchQuery.value = intent.query
             }
             is ShoppingIntent.AddItemToInventory -> {
-                // Logic to add to inventory and remove from shopping list
+                viewModelScope.launch {
+                    deleteShoppingItemUseCase(intent.id)
+                }
             }
-        }
-    }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            val items = mapOf(
-                "Produce" to listOf(
-                    ShoppingItem("1", "Bananas", "1 bunch"),
-                    ShoppingItem("2", "Spinach", "1 bag")
-                ),
-                "Dairy & Eggs" to listOf(
-                    ShoppingItem("3", "Greek Yogurt", "2 tubs"),
-                    ShoppingItem("4", "Milk", "1 gallon", isChecked = true)
-                ),
-                "Pantry Staples" to listOf(
-                    ShoppingItem("5", "Olive Oil", "1L bottle")
-                )
-            )
-
-            _uiState.value = _uiState.value.copy(
-                groupedItems = items,
-                recentlyBought = listOf("Eggs", "Bread", "Coffee Beans")
-            )
         }
     }
 
     private fun toggleItem(id: String) {
-        val currentGrouped = _uiState.value.groupedItems.toMutableMap()
-        for ((category, items) in currentGrouped) {
-            val index = items.indexOfFirst { it.id == id }
-            if (index != -1) {
-                val newItems = items.toMutableList()
-                newItems[index] = items[index].copy(isChecked = !items[index].isChecked)
-                currentGrouped[category] = newItems
-                break
+        viewModelScope.launch {
+            val item = uiState.value.groupedItems.values.flatten().firstOrNull { it.id == id }
+            if (item != null) {
+                toggleShoppingItemUseCase(id, !item.isChecked)
             }
         }
-        _uiState.value = _uiState.value.copy(groupedItems = currentGrouped)
     }
 }
 
@@ -86,3 +97,4 @@ sealed interface ShoppingIntent {
     data class UpdateSearch(val query: String) : ShoppingIntent
     data class AddItemToInventory(val id: String) : ShoppingIntent
 }
+

@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 
 sealed interface Destination : NavKey {
     @Serializable
+    data object Login : Destination
+
+    @Serializable
     data object Home : Destination
 
     @Serializable
@@ -14,5 +17,11 @@ sealed interface Destination : NavKey {
     data object Shopping : Destination
 
     @Serializable
+    data object Profile : Destination
+
+    @Serializable
     data class InventoryDetail(val id: String? = null) : Destination
+
+    @Serializable
+    data object AddShoppingItem : Destination
 }

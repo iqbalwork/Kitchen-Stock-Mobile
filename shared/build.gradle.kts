@@ -78,10 +78,12 @@ kotlin {
 
             // Networking & Debugging
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.logging)
             implementation(libs.wiretap.ktor)
             implementation(libs.kotlinx.datetime)
             implementation(libs.napier)
-            implementation(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.core)
+            implementation(libs.multiplatform.settings.noarg)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

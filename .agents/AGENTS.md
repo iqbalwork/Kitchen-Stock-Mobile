@@ -10,6 +10,7 @@ You are an expert Kotlin Multiplatform (KMP) and Compose Multiplatform (CMP) dev
 - **Navigation:** Jetpack Navigation Compose (Navigation 3)
 - **Local Database:** SQLDelight (Offline-first / Single Source of Truth)
 - **Remote Backend:** Supabase (gotrue-kt, postgrest-kt)
+- **Session Management:** Multiplatform Settings (for local settings and session persistence)
 - **Image Loading:** Coil3
 - **Configuration:** BuildKonfig (Multiplatform BuildConfig)
 
@@ -67,17 +68,23 @@ Every UI screen MUST be split into two separate composable files to maintain sep
 - Always use `MaterialTheme.colorScheme` and `MaterialTheme.typography` for styling.
 - Do NOT hardcode colors or use absolute values that break when switching themes.
 
-### 4. Compose Previews (Mandatory)
-- Every `*Content.kt` file and every individual UI component MUST have a `@Preview` function.
-- Previews must demonstrate both **Light** and **Dark** modes to ensure theme consistency.
-- Previews **MUST** be wrapped inside `KitchenStockTheme`.
-- Since `*Content` and components are stateless, always generate mock data, dummy states, or use `@PreviewParameter` to populate the previews with realistic content.
+### 4. Compose Previews (Mandatory Standards)
+- **Every composable component**, regardless of size or scope (e.g., full screen `*Content`, custom buttons, specialized text labels, cards, list items), **MUST** have its own `@Preview` function.
+- Previews must demonstrate both **Light** and **Dark** modes to ensure theme consistency across all UI elements.
+- All Previews **MUST** be wrapped inside `KitchenStockTheme`.
+- Since components are stateless, always generate mock data, dummy states, or use `@PreviewParameter` to provide realistic content.
 - Never include `ViewModel` or real Data Layer dependencies in previews.
+- Component-level previews help in isolated development and ensure UI building blocks are reusable and robust.
 
 ### 5. Navigation
 - Use **Jetpack Navigation Compose** (`androidx.navigation.compose`).
 - Use type-safe navigation passing Kotlin Serialization data classes or objects for routes.
 - Keep navigation logic inside `[FeatureName]Screen.kt` or a dedicated Navigation graph file, never inside the `*Content.kt` file.
+
+### 6. ViewModel State Reset for Pop/Re-entry (Form/Input Screens)
+- ViewModels bound to screens in Navigation 3/Compose can be retained in memory when a screen is popped and reopened.
+- For form or add-item screens, always implement a reset function (e.g. `resetState()` or `resetForm()`) in the ViewModel to reset the success flag and input fields.
+- Call this reset function in the stateful screen's `LaunchedEffect(isSuccess)` immediately after calling the back-navigation callback (e.g., `onBackClick()`). This prevents the screen from immediately closing upon re-entry due to a stale success flag.
 
 ---
 

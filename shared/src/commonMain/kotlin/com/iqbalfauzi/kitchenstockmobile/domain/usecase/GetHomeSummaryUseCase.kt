@@ -9,6 +9,7 @@ import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.AttentionStatus
 import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.HomeUiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
@@ -25,7 +26,10 @@ class GetHomeSummaryUseCase(
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val threeDaysLater = today.plus(3, DateTimeUnit.DAY)
 
-        return repository.getInventoryItems().map { items ->
+        return combine(
+            repository.getInventoryItems(),
+            repository.getProducts()
+        ) { items, products ->
             val expiringItems = items.filter { 
                 it.expiryDate != null && it.expiryDate <= threeDaysLater && it.quantity > 0 
             }
@@ -68,7 +72,8 @@ class GetHomeSummaryUseCase(
                 totalItems = items.size,
                 expiringCount = expiringItems.size,
                 outOfStockCount = outOfStockItems.size,
-                attentionItems = attentionItems.take(10) // Limit to top 10
+                attentionItems = attentionItems.take(10), // Limit to top 10
+                products = products
             )
         }
     }

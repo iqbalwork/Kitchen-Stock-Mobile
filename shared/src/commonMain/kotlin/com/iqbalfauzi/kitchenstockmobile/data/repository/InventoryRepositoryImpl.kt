@@ -67,15 +67,28 @@ class InventoryRepositoryImpl(
     }
 
     override suspend fun syncInventory() {
+        Napier.d("Starting syncInventory...")
         withContext(Dispatchers.IO) {
             try {
                 // 1. Fetch from Supabase
+                Napier.d("Fetching categories...")
                 val categories = supabase.postgrest["categories"].select().decodeList<CategoryDto>()
+                Napier.d("Fetched ${categories.size} categories")
+
+                Napier.d("Fetching storage_locations...")
                 val storageLocations = supabase.postgrest["storage_locations"].select().decodeList<StorageLocationDto>()
+                Napier.d("Fetched ${storageLocations.size} storage locations")
+
+                Napier.d("Fetching products...")
                 val products = supabase.postgrest["products"].select().decodeList<ProductDto>()
+                Napier.d("Fetched ${products.size} products")
+
+                Napier.d("Fetching inventory...")
                 val inventory = supabase.postgrest["inventory"].select().decodeList<InventoryDto>()
+                Napier.d("Fetched ${inventory.size} inventory items")
 
                 // 2. Update Local DB
+                Napier.d("Updating local database...")
                 database.transaction {
                     queries.deleteAllInventory()
                     queries.deleteAllProducts()

@@ -10,6 +10,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun ShoppingScreen(
     onNavigateToDetail: (String?) -> Unit,
+    onNavigateToAddItem: () -> Unit,
     viewModel: ShoppingViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -17,6 +18,6 @@ fun ShoppingScreen(
     ShoppingContent(
         uiState = uiState,
         onIntent = viewModel::onIntent,
-        onAddClick = { onNavigateToDetail(null) }
+        onAddClick = onNavigateToAddItem
     )
 }

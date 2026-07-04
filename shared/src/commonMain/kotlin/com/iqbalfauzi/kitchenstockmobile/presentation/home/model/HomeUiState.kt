@@ -2,11 +2,15 @@ package com.iqbalfauzi.kitchenstockmobile.presentation.home.model
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
+import com.iqbalfauzi.kitchenstockmobile.domain.model.Product
+
 data class HomeUiState(
     val totalItems: Int = 0,
     val expiringCount: Int = 0,
     val outOfStockCount: Int = 0,
-    val attentionItems: List<AttentionItem> = emptyList()
+    val attentionItems: List<AttentionItem> = emptyList(),
+    val products: List<Product> = emptyList(),
+    val isLoading: Boolean = false
 )
 
 data class AttentionItem(

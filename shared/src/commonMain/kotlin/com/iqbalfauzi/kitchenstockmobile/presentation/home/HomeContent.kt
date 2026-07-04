@@ -48,11 +48,64 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iqbalfauzi.kitchenstockmobile.domain.model.Product
 import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.AttentionItem
 import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.AttentionStatus
 import com.iqbalfauzi.kitchenstockmobile.presentation.home.model.HomeUiState
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.KitchenStockTheme
 import com.iqbalfauzi.kitchenstockmobile.ui.theme.LocalSpacing
+
+@Composable
+private fun ProductListItem(product: Product) {
+    val spacing = LocalSpacing.current
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Row(
+            modifier = Modifier.padding(spacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Inventory,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.width(spacing.md))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Unit: ${product.unit} • Min Stock: ${product.minStockLevel}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (product.barcode != null) {
+                Text(
+                    text = product.barcode,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,6 +179,19 @@ fun HomeContent(
 
             items(uiState.attentionItems) { item ->
                 AttentionListItem(item)
+            }
+
+            item {
+                Text(
+                    text = "Your Products",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = spacing.sm)
+                )
+            }
+
+            items(uiState.products) { product ->
+                ProductListItem(product)
             }
         }
     }
@@ -331,14 +397,26 @@ fun HomeContentPreview() {
                     AttentionItem(
                         "2", "Large Eggs", "0 remaining",
                         AttentionStatus.OutOfStock(), Icons.Default.Egg
+                    )
+                ),
+                products = listOf(
+                    com.iqbalfauzi.kitchenstockmobile.domain.model.Product(
+                        id = "1",
+                        categoryId = null,
+                        name = "Spinach",
+                        barcode = null,
+                        unit = "bag",
+                        minStockLevel = 1.0,
+                        imageUrl = null
                     ),
-                    AttentionItem(
-                        "3", "Spinach", "1 bag",
-                        AttentionStatus.Expiring("Exp. in 1 Day"), Icons.Default.Eco
-                    ),
-                    AttentionItem(
-                        "4", "Bread", "2 slices",
-                        AttentionStatus.LowStock(), Icons.Default.BakeryDining
+                    com.iqbalfauzi.kitchenstockmobile.domain.model.Product(
+                        id = "2",
+                        categoryId = null,
+                        name = "Whole Milk",
+                        barcode = "8991234567890",
+                        unit = "ml",
+                        minStockLevel = 500.0,
+                        imageUrl = null
                     )
                 )
             )

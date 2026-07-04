@@ -103,3 +103,41 @@ SELECT * FROM StorageLocation;
 
 getAllCategories:
 SELECT * FROM Category;
+
+CREATE TABLE ShoppingList (
+    id TEXT NOT NULL PRIMARY KEY,
+    productId TEXT NOT NULL,
+    quantity REAL NOT NULL,
+    isBought INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT,
+    updatedAt TEXT,
+    FOREIGN KEY(productId) REFERENCES Product(id)
+);
+
+getShoppingListWithDetails:
+SELECT
+    ShoppingList.*,
+    Product.name AS productName,
+    Product.unit AS productUnit,
+    Product.imageUrl AS productImageUrl,
+    Product.categoryId AS productCategoryId,
+    Category.name AS categoryName,
+    Category.icon AS categoryIcon
+FROM ShoppingList
+JOIN Product ON ShoppingList.productId = Product.id
+LEFT JOIN Category ON Product.categoryId = Category.id;
+
+insertShoppingList:
+INSERT OR REPLACE INTO ShoppingList(id, productId, quantity, isBought, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+deleteShoppingListById:
+DELETE FROM ShoppingList WHERE id = ?;
+
+updateShoppingListStatus:
+UPDATE ShoppingList SET isBought = ?, updatedAt = ? WHERE id = ?;
+
+deleteAllShoppingList:
+DELETE FROM ShoppingList;
+
+

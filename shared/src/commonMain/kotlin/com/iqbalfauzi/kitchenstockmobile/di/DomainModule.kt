@@ -9,6 +9,10 @@ import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetProductsUseCase
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetStorageLocationsUseCase
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.UpsertInventoryItemUseCase
 import com.iqbalfauzi.kitchenstockmobile.domain.usecase.UpsertProductUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.GetShoppingListUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.ToggleShoppingItemUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.AddShoppingItemUseCase
+import com.iqbalfauzi.kitchenstockmobile.domain.usecase.DeleteShoppingItemUseCase
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
@@ -22,4 +26,9 @@ val domainModule = module {
     factoryOf(::UpsertInventoryItemUseCase)
     factoryOf(::UpsertProductUseCase)
     factoryOf(::DeleteInventoryItemUseCase)
+    factoryOf(::GetShoppingListUseCase)
+    factoryOf(::ToggleShoppingItemUseCase)
+    factoryOf(::AddShoppingItemUseCase)
+    factoryOf(::DeleteShoppingItemUseCase)
 }
+
