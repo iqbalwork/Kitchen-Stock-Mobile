@@ -16,18 +16,17 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.android)
-    implementation(libs.napier)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
 }
 
 android {
-    namespace = "com.iqbalfauzi.kitchenstockmobile"
+    namespace = "com.iqbalfauzi.kitchenstock"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.iqbalfauzi.kitchenstockmobile"
+        applicationId = "com.iqbalfauzi.kitchenstock"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

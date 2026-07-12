@@ -1,4 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -22,8 +23,19 @@ kotlin {
         }
     }
     
+    jvm()
+    
+    js {
+        browser()
+    }
+    
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+    }
+    
     android {
-       namespace = "com.iqbalfauzi.kitchenstockmobile.shared"
+       namespace = "com.iqbalfauzi.kitchenstock.shared"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()
     
@@ -43,6 +55,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.sqldelight.android.driver)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.android)
             implementation(libs.koin.android)
         }
         commonMain.dependencies {
@@ -79,7 +92,6 @@ kotlin {
             // Networking & Debugging
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.logging)
-            implementation(libs.wiretap.ktor)
             implementation(libs.kotlinx.datetime)
             implementation(libs.napier)
             implementation(libs.multiplatform.settings.core)
@@ -92,19 +104,32 @@ kotlin {
             implementation(libs.sqldelight.native.driver)
             implementation(libs.ktor.client.darwin)
         }
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.sqlite.driver)
+            implementation(libs.ktor.client.okhttp)
+        }
+        wasmJsMain.dependencies {
+            implementation(libs.sqldelight.wasm.driver)
+            implementation(libs.ktor.client.js)
+        }
+        jsMain.dependencies {
+            implementation(libs.wrappers.browser)
+            implementation(libs.sqldelight.wasm.driver)
+            implementation(libs.ktor.client.js)
+        }
     }
 }
 
 sqldelight {
     databases {
         create("KitchenDatabase") {
-            packageName.set("com.iqbalfauzi.kitchenstockmobile.db")
+            packageName.set("com.iqbalfauzi.kitchenstock.db")
         }
     }
 }
 
 buildkonfig {
-    packageName = "com.iqbalfauzi.kitchenstockmobile"
+    packageName = "com.iqbalfauzi.kitchenstock"
 
     defaultConfigs {
         val projectId = project.findProperty("supabase.project.id")?.toString() ?: ""

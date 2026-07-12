@@ -1,0 +1,5 @@
+{
+  "name": "kitchen-stock-root",
+  "private": true,
+  "description": "Root package.json to prevent Yarn from looking up to parent directories for packageManager configuration"
+}

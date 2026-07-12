@@ -1,4 +1,4 @@
-rootProject.name = "KitchenStockMobile"
+rootProject.name = "KitchenStock"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -28,5 +28,11 @@ dependencyResolutionManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 include(":androidApp")
+include(":desktopApp")
 include(":shared")
+include(":webApp")
