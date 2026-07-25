@@ -274,8 +274,30 @@ private fun RecentlyBoughtSection(
 
 @Preview
 @Composable
-fun ShoppingContentPreview() {
-    KitchenStockTheme {
+fun ShoppingContentLightPreview() {
+    KitchenStockTheme(darkTheme = false) {
+        ShoppingContent(
+            uiState = ShoppingUiState(
+                groupedItems = mapOf(
+                    "Produce" to listOf(
+                        ShoppingItem("1", "Bananas", "1 bunch"),
+                        ShoppingItem("2", "Spinach", "1 bag")
+                    ),
+                    "Dairy & Eggs" to listOf(
+                        ShoppingItem("3", "Greek Yogurt", "2 tubs"),
+                        ShoppingItem("4", "Milk", "1 gallon", isChecked = true)
+                    )
+                ),
+                recentlyBought = listOf("Eggs", "Bread", "Coffee Beans")
+            )
+        )
+    }
+}
+
+@Preview
+@Composable
+fun ShoppingContentDarkPreview() {
+    KitchenStockTheme(darkTheme = true) {
         ShoppingContent(
             uiState = ShoppingUiState(
                 groupedItems = mapOf(

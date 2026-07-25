@@ -390,8 +390,40 @@ private fun StatusBadge(status: AttentionStatus) {
 
 @Preview
 @Composable
-fun HomeContentPreview() {
-    KitchenStockTheme {
+fun HomeContentLightPreview() {
+    KitchenStockTheme(darkTheme = false) {
+        HomeContent(
+            uiState = HomeUiState(
+                totalItems = 42,
+                expiringCount = 5,
+                outOfStockCount = 3,
+                attentionItems = listOf(
+                    AttentionItem(
+                        "1", "Whole Milk", "200ml remaining",
+                        AttentionStatus.Expiring("Exp. in 2 Days"), Icons.Default.WaterDrop
+                    ),
+                    AttentionItem(
+                        "2", "Large Eggs", "0 remaining",
+                        AttentionStatus.OutOfStock(), Icons.Default.Egg
+                    ),
+                    AttentionItem(
+                        "3", "Spinach", "1 bag",
+                        AttentionStatus.Expiring("Exp. in 1 Day"), Icons.Default.Eco
+                    ),
+                    AttentionItem(
+                        "4", "Bread", "2 slices",
+                        AttentionStatus.LowStock(), Icons.Default.BakeryDining
+                    )
+                )
+            )
+        )
+    }
+}
+
+@Preview
+@Composable
+fun HomeContentDarkPreview() {
+    KitchenStockTheme(darkTheme = true) {
         HomeContent(
             uiState = HomeUiState(
                 totalItems = 42,

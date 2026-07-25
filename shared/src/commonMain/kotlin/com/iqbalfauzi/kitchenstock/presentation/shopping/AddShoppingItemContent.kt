@@ -60,6 +60,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iqbalfauzi.kitchenstock.domain.model.Category
 import com.iqbalfauzi.kitchenstock.domain.model.Product
+import com.iqbalfauzi.kitchenstock.presentation.inventory_detail.InventoryDetailContent
+import com.iqbalfauzi.kitchenstock.presentation.inventory_detail.model.InventoryDetailUiState
 import com.iqbalfauzi.kitchenstock.ui.theme.KitchenStockTheme
 import com.iqbalfauzi.kitchenstock.ui.theme.LocalSpacing
 
@@ -302,6 +304,7 @@ private fun CategorySelection(
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.surface,
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
@@ -405,17 +408,22 @@ private fun UnitDropdown(
 
 @Preview
 @Composable
-fun AddShoppingItemContentPreview() {
-    val dummyProducts = listOf(
-        Product("1", null, "Bananas", unit = "bunch"),
-        Product("2", null, "Spinach", unit = "bag"),
-        Product("3", null, "Milk", unit = "gallon")
-    )
-    KitchenStockTheme {
-        AddShoppingItemContent(
-            uiState = AddShoppingItemUiState(
-                products = dummyProducts
-            ),
+fun InventoryDetailContentLightPreview() {
+    KitchenStockTheme(darkTheme = false) {
+        InventoryDetailContent(
+            uiState = InventoryDetailUiState(),
+            onIntent = {},
+            onBackClick = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+fun InventoryDetailContentDarkPreview() {
+    KitchenStockTheme(darkTheme = true) {
+        InventoryDetailContent(
+            uiState = InventoryDetailUiState(),
             onIntent = {},
             onBackClick = {}
         )

@@ -45,7 +45,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -305,8 +304,29 @@ private fun QuantityToggle(
 
 @Preview
 @Composable
-fun PantryContentPreview() {
-    KitchenStockTheme {
+fun PantryContentLightPreview() {
+    KitchenStockTheme(darkTheme = false) {
+        PantryContent(
+            uiState = PantryUiState(
+                groupedItems = mapOf(
+                    "FRIDGE" to listOf(
+                        PantryItem("1", "Greek Yogurt", 1, "500g", "Fridge", Icons.Default.WaterDrop, ExpiryStatus.Warning("Expires in 3 days")),
+                        PantryItem("2", "Chicken Breast", 2, "units", "Fridge", Icons.Default.WaterDrop, ExpiryStatus.Critical("Expires Tomorrow"))
+                    ),
+                    "PANTRY" to listOf(
+                        PantryItem("3", "Avocados", 4, "units", "Pantry", Icons.Default.Eco, ExpiryStatus.Normal()),
+                        PantryItem("4", "Jasmine Rice", 1, "1.5kg", "Pantry", Icons.Default.Grain, ExpiryStatus.Normal())
+                    )
+                )
+            )
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PantryContentDarkPreview() {
+    KitchenStockTheme(darkTheme = true) {
         PantryContent(
             uiState = PantryUiState(
                 groupedItems = mapOf(
