@@ -17,6 +17,12 @@ fun InventoryDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(id) {
+        if (id == null) {
+            viewModel.onIntent(InventoryDetailIntent.ResetForm)
+        }
+    }
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             onBackClick()

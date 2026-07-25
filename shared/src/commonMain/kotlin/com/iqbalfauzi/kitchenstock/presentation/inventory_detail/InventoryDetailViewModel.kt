@@ -109,9 +109,15 @@ class InventoryDetailViewModel(
             productId = "",
             name = "",
             categoryId = "",
+            storageLocationId = "",
+            location = "Fridge",
             quantity = 1.0,
+            unit = "Units",
+            minStockLevel = 0.0,
             expiryDate = "",
-            isSuccess = false
+            isSuccess = false,
+            isSaving = false,
+            isLoading = false
         )
     }
 

@@ -15,10 +15,14 @@ fun AddShoppingItemScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.onIntent(AddShoppingItemIntent.ResetForm)
+    }
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             onBackClick()
-            viewModel.onIntent(AddShoppingItemIntent.ResetSuccess)
+            viewModel.onIntent(AddShoppingItemIntent.ResetForm)
         }
     }
 

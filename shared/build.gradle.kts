@@ -17,9 +17,15 @@ kotlin {
         iosArm64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->
+        iosTarget.compilations.all {
+            compilerOptions.configure {
+                freeCompilerArgs.add("-Xoverride-konan-properties=iphoneos_deployment_target=18.2")
+            }
+        }
         iosTarget.binaries.framework {
             baseName = "Shared"
             isStatic = true
+            linkerOpts("-lsqlite3")
         }
     }
     

@@ -6,8 +6,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,7 +29,6 @@ import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
@@ -44,8 +42,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -66,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iqbalfauzi.kitchenstock.presentation.inventory_detail.model.InventoryDetailUiState
@@ -166,9 +163,7 @@ fun InventoryDetailContent(
             Spacer(modifier = Modifier.height(spacing.sm))
             ProductSelection(
                 name = uiState.name,
-                onNameChange = { onIntent(InventoryDetailIntent.UpdateName(it)) },
-                products = uiState.products,
-                onProductSelected = { onIntent(InventoryDetailIntent.SelectProduct(it.id)) }
+                onNameChange = { onIntent(InventoryDetailIntent.UpdateName(it)) }
             )
 
             Spacer(modifier = Modifier.height(spacing.lg))
@@ -181,7 +176,7 @@ fun InventoryDetailContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(spacing.sm))
-            CategorySelection(
+            CategoryDropdown(
                 selectedCategoryId = uiState.categoryId,
                 categories = uiState.categories
             ) { onIntent(InventoryDetailIntent.SelectCategory(it)) }
@@ -196,7 +191,7 @@ fun InventoryDetailContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(spacing.sm))
-            LocationSelection(
+            LocationDropdown(
                 selectedLocationId = uiState.storageLocationId,
                 locations = uiState.locations
             ) { onIntent(InventoryDetailIntent.SelectLocation(it)) }
@@ -279,6 +274,7 @@ fun InventoryDetailContent(
                 value = displayDate,
                 onValueChange = { },
                 readOnly = true,
+                singleLine = true,
                 interactionSource = interactionSource,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("DD/MM/YYYY") },
@@ -336,127 +332,92 @@ fun InventoryDetailContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductSelection(
     name: String,
-    onNameChange: (String) -> Unit,
-    products: List<com.iqbalfauzi.kitchenstock.domain.model.Product>,
-    onProductSelected: (com.iqbalfauzi.kitchenstock.domain.model.Product) -> Unit
+    onNameChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = name,
+        onValueChange = onNameChange,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth(),
+        placeholder = { Text("e.g., Organic Milk") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+        )
+    )
+}
+
+@Composable
+private fun CategoryDropdown(
+    selectedCategoryId: String,
+    categories: List<com.iqbalfauzi.kitchenstock.domain.model.Category>,
+    onCategorySelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val filteredProducts = remember(name, products) {
-        if (name.isBlank()) {
-            products.take(5)
-        } else {
-            products.filter { it.name.contains(name, ignoreCase = true) }.take(5)
-        }
-    }
+    val selectedCategory = categories.find { it.id == selectedCategoryId }
 
     Box {
-        OutlinedTextField(
-            value = name,
-            onValueChange = {
-                onNameChange(it)
-                expanded = true
-            },
+        OutlinedCard(
+            onClick = { expanded = true },
             shape = MaterialTheme.shapes.medium,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("e.g., Organic Milk") },
-            trailingIcon = {
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = null
-                    )
-                }
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-            )
-        )
-        
-        if (expanded && filteredProducts.isNotEmpty()) {
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                filteredProducts.forEach { product ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(product.name)
-                                Text(
-                                    text = product.unit,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        },
-                        onClick = {
-                            onProductSelected(product)
-                            expanded = false
-                        }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = selectedCategory?.icon ?: "🏷️")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = selectedCategory?.name ?: "Select Category",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (selectedCategory == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                     )
                 }
+                Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            categories.forEach { category ->
+                DropdownMenuItem(
+                    leadingIcon = { Text(category.icon ?: "🏷️") },
+                    text = { Text(category.name) },
+                    onClick = {
+                        onCategorySelected(category.id)
+                        expanded = false
+                    }
+                )
             }
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CategorySelection(
-    selectedCategoryId: String,
-    categories: List<com.iqbalfauzi.kitchenstock.domain.model.Category>,
-    onCategorySelected: (String) -> Unit
-) {
-    val spacing = LocalSpacing.current
-
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(spacing.sm),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        categories.forEach { category ->
-            val isSelected = category.id == selectedCategoryId
-            FilterChip(
-                selected = isSelected,
-                onClick = { onCategorySelected(category.id) },
-                label = { Text(category.name) },
-                leadingIcon = {
-                    Text(category.icon ?: "🏷️")
-                },
-                shape = MaterialTheme.shapes.medium,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    borderColor = MaterialTheme.colorScheme.outlineVariant,
-                    selectedBorderColor = Color.Transparent,
-                    enabled = true,
-                    selected = isSelected
-                )
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun LocationSelection(
+private fun LocationDropdown(
     selectedLocationId: String,
     locations: List<StorageLocationDomain>,
     onLocationSelected: (String) -> Unit
 ) {
-    val spacing = LocalSpacing.current
-    
-    // Default icons for known locations or a generic one
+    var expanded by remember { mutableStateOf(false) }
+    val selectedLocation = locations.find { it.id == selectedLocationId }
+
     fun getIcon(name: String) = when {
         name.contains("Fridge", ignoreCase = true) -> Icons.Default.Kitchen
         name.contains("Pantry", ignoreCase = true) -> Icons.Default.Inventory2
@@ -464,39 +425,61 @@ private fun LocationSelection(
         else -> Icons.Default.Coffee
     }
 
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(spacing.sm),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        locations.forEach { location ->
-            val isSelected = location.id == selectedLocationId
-            FilterChip(
-                selected = isSelected,
-                onClick = { onLocationSelected(location.id) },
-                label = { Text(location.name) },
-                leadingIcon = {
+    Box {
+        OutlinedCard(
+            onClick = { expanded = true },
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        getIcon(location.name),
+                        imageVector = selectedLocation?.let { getIcon(it.name) } ?: Icons.Default.Kitchen,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp),
+                        tint = if (selectedLocation == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
                     )
-                },
-                shape = MaterialTheme.shapes.medium,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    borderColor = MaterialTheme.colorScheme.outlineVariant,
-                    selectedBorderColor = Color.Transparent,
-                    enabled = true,
-                    selected = isSelected
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = selectedLocation?.name ?: "Select Location",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (selectedLocation == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            locations.forEach { location ->
+                DropdownMenuItem(
+                    leadingIcon = {
+                        Icon(
+                            getIcon(location.name),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    text = { Text(location.name) },
+                    onClick = {
+                        onLocationSelected(location.id)
+                        expanded = false
+                    }
                 )
-            )
+            }
         }
     }
 }

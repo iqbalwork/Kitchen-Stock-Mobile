@@ -37,6 +37,7 @@ sealed interface AddShoppingItemIntent {
     data class UpdateUnit(val unit: String) : AddShoppingItemIntent
     data object Save : AddShoppingItemIntent
     data object ResetSuccess : AddShoppingItemIntent
+    data object ResetForm : AddShoppingItemIntent
 }
 
 class AddShoppingItemViewModel(
@@ -107,7 +108,15 @@ class AddShoppingItemViewModel(
             }
             AddShoppingItemIntent.Save -> saveItem()
             AddShoppingItemIntent.ResetSuccess -> _uiState.value = _uiState.value.copy(isSuccess = false)
+            AddShoppingItemIntent.ResetForm -> resetForm()
         }
+    }
+
+    private fun resetForm() {
+        _uiState.value = AddShoppingItemUiState(
+            products = _uiState.value.products,
+            categories = _uiState.value.categories
+        )
     }
 
     @OptIn(ExperimentalUuidApi::class)

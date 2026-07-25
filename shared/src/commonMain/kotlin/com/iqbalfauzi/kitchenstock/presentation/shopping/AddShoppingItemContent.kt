@@ -17,13 +17,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iqbalfauzi.kitchenstock.domain.model.Category
@@ -117,9 +118,7 @@ fun AddShoppingItemContent(
             Spacer(modifier = Modifier.height(spacing.sm))
             ProductSelection(
                 name = uiState.name,
-                onNameChange = { onIntent(AddShoppingItemIntent.UpdateName(it)) },
-                products = uiState.products,
-                onProductSelected = { onIntent(AddShoppingItemIntent.SelectProduct(it.id)) }
+                onNameChange = { onIntent(AddShoppingItemIntent.UpdateName(it)) }
             )
 
             Spacer(modifier = Modifier.height(spacing.lg))
@@ -132,7 +131,7 @@ fun AddShoppingItemContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(spacing.sm))
-            CategorySelection(
+            CategoryDropdown(
                 selectedCategoryId = uiState.categoryId,
                 categories = uiState.categories
             ) { onIntent(AddShoppingItemIntent.SelectCategory(it)) }
@@ -207,114 +206,79 @@ fun AddShoppingItemContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductSelection(
     name: String,
-    onNameChange: (String) -> Unit,
-    products: List<Product>,
-    onProductSelected: (Product) -> Unit
+    onNameChange: (String) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val filteredProducts = remember(name, products) {
-        if (name.isBlank()) {
-            products.take(5)
-        } else {
-            products.filter { it.name.contains(name, ignoreCase = true) }.take(5)
-        }
-    }
-
-    Box {
-        OutlinedTextField(
-            value = name,
-            onValueChange = {
-                onNameChange(it)
-                expanded = true
-            },
-            shape = MaterialTheme.shapes.medium,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("e.g., Organic Milk") },
-            trailingIcon = {
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = null
-                    )
-                }
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-            )
+    OutlinedTextField(
+        value = name,
+        onValueChange = onNameChange,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth(),
+        placeholder = { Text("e.g., Organic Milk") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
         )
-
-        if (expanded && filteredProducts.isNotEmpty()) {
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(0.9f)
-            ) {
-                filteredProducts.forEach { product ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(product.name)
-                                Text(
-                                    text = product.unit,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        },
-                        onClick = {
-                            onProductSelected(product)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-    }
+    )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CategorySelection(
+private fun CategoryDropdown(
     selectedCategoryId: String,
     categories: List<Category>,
     onCategorySelected: (String) -> Unit
 ) {
-    val spacing = LocalSpacing.current
+    var expanded by remember { mutableStateOf(false) }
+    val selectedCategory = categories.find { it.id == selectedCategoryId }
 
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(spacing.sm),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        categories.forEach { category ->
-            val isSelected = category.id == selectedCategoryId
-            FilterChip(
-                selected = isSelected,
-                onClick = { onCategorySelected(category.id) },
-                label = { Text(category.name) },
-                leadingIcon = {
-                    Text(category.icon ?: "🏷️")
-                },
-                shape = MaterialTheme.shapes.medium,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    borderColor = MaterialTheme.colorScheme.outlineVariant,
-                    selectedBorderColor = Color.Transparent,
-                    enabled = true,
-                    selected = isSelected
+    Box {
+        OutlinedCard(
+            onClick = { expanded = true },
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = selectedCategory?.icon ?: "🏷️")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = selectedCategory?.name ?: "Select Category",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (selectedCategory == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            categories.forEach { category ->
+                DropdownMenuItem(
+                    leadingIcon = { Text(category.icon ?: "🏷️") },
+                    text = { Text(category.name) },
+                    onClick = {
+                        onCategorySelected(category.id)
+                        expanded = false
+                    }
                 )
-            )
+            }
         }
     }
 }
