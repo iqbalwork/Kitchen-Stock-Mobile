@@ -55,7 +55,7 @@ Clean Architecture + MVI. Every screen is split into a **Screen** (stateful, wir
 ## 🔑 Auth Features
 
 * Email/password sign up, login, logout.
-* **Sign in with Google** — OAuth flow via external browser + deep link callback (`kitchenstock://login-callback`, registered in `AndroidManifest.xml`, handled in `MainActivity`). Requires the Google provider to be enabled with a Client ID/Secret in the Supabase project dashboard (Authentication → Providers) — this is a one-time manual step outside this repo.
+* **Sign in with Google** — OAuth flow via external browser + deep link callback (`kitchenstock://login-callback`, registered in `AndroidManifest.xml`, handled in `MainActivity`). Requires the Google provider to be enabled with a Client ID/Secret in the Supabase project dashboard (Authentication → Providers) — this is a one-time manual step outside this repo, see `.agents/SUPABASE_SETUP.md` for the full checklist.
 * **Forgot password** — sends a reset link via `auth.resetPasswordForEmail`.
 * Sign in with Apple, anonymous sign-in: wired in `AuthRepository`, same OAuth pattern as Google.
 * Not yet implemented: change password while logged in (planned, see `.agents/docs/PRD.md` in the workspace root).
