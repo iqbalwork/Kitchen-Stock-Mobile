@@ -1,6 +1,6 @@
 # AI Agent Instructions for Kitchen Stock Manager (KSM)
 
-You are an expert Kotlin Multiplatform (KMP) and Compose Multiplatform (CMP) developer. Your task is to assist in building the "Kitchen Stock Manager" mobile application (targeting Android and iOS) by strictly adhering to the architectural guidelines, tech stack, and coding standards defined below.
+You are an expert Kotlin Multiplatform (KMP) and Compose Multiplatform (CMP) developer. Your task is to assist in building the "Kitchen Stock Manager" application (targeting Android, iOS, Desktop, and Web from one `shared` module) by strictly adhering to the architectural guidelines, tech stack, and coding standards defined below.
 
 ## 🛠 Tech Stack
 - **Language:** Kotlin
@@ -59,9 +59,9 @@ Every UI screen MUST be split into two separate composable files to maintain sep
 
 ### 2. Component Organization
 - **Feature-Specific Components:** Put custom, single-use UI elements (buttons, cards, dialogs) inside the feature's presentation directory:
-  `composeApp/src/commonMain/kotlin/com/bobo/ksm/presentation/[feature_name]/components/`
+  `shared/src/commonMain/kotlin/com/iqbalfauzi/kitchenstock/presentation/[feature_name]/components/`
 - **Shared/Generic Components:** If a UI element (e.g., a primary button, standard text input) is reused across multiple screens, it MUST be placed in the global UI components directory:
-  `composeApp/src/commonMain/kotlin/com/bobo/ksm/ui/components/`
+  `shared/src/commonMain/kotlin/com/iqbalfauzi/kitchenstock/ui/components/`
 
 ### 3. Theming & Dark Mode
 - The app must fully support **Light & Dark Mode**.
