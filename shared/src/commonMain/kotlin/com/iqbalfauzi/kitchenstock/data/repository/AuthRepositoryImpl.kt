@@ -33,6 +33,11 @@ class AuthRepositoryImpl(
         }
     }
 
+    override suspend fun resetPasswordForEmail(email: String) {
+        Napier.d("resetPasswordForEmail: $email")
+        supabase.auth.resetPasswordForEmail(email)
+    }
+
     override suspend fun signInWithGoogle() {
         Napier.d("signInWithGoogle")
         supabase.auth.signInWith(Google)

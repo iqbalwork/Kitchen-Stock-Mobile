@@ -38,6 +38,8 @@ val dataModule = module {
             install(Postgrest)
             install(Auth) {
                 sessionManager = SettingsSessionManager(get())
+                scheme = "kitchenstock"
+                host = "login-callback"
             }
             install(Realtime)
 

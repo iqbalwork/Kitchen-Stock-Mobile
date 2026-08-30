@@ -12,6 +12,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToSignUp: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
     viewModel: LoginViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -31,6 +32,6 @@ fun LoginScreen(
         onGoogleLoginClick = viewModel::signInWithGoogle,
         onAppleLoginClick = viewModel::signInWithApple,
         onSignUpClick = onNavigateToSignUp,
-        onForgotPasswordClick = { /* TODO: Implement forgot password */ }
+        onForgotPasswordClick = onNavigateToForgotPassword
     )
 }

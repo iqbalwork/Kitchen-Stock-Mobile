@@ -24,4 +24,10 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object AddShoppingItem : Destination
+
+    @Serializable
+    data object SignUp : Destination
+
+    @Serializable
+    data object ForgotPassword : Destination
 }

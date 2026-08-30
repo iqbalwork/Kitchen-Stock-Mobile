@@ -38,7 +38,9 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.iqbalfauzi.kitchenstock.domain.repository.AuthRepository
+import com.iqbalfauzi.kitchenstock.presentation.auth.ForgotPasswordScreen
 import com.iqbalfauzi.kitchenstock.presentation.auth.LoginScreen
+import com.iqbalfauzi.kitchenstock.presentation.auth.SignUpScreen
 import com.iqbalfauzi.kitchenstock.presentation.home.HomeScreen
 import com.iqbalfauzi.kitchenstock.presentation.inventory_detail.InventoryDetailScreen
 import com.iqbalfauzi.kitchenstock.presentation.pantry.PantryScreen
@@ -62,6 +64,8 @@ private val navConfig = SavedStateConfiguration {
             subclass(Destination.Profile::class, Destination.Profile.serializer())
             subclass(Destination.InventoryDetail::class, Destination.InventoryDetail.serializer())
             subclass(Destination.AddShoppingItem::class, Destination.AddShoppingItem.serializer())
+            subclass(Destination.SignUp::class, Destination.SignUp.serializer())
+            subclass(Destination.ForgotPassword::class, Destination.ForgotPassword.serializer())
         }
     }
 }
@@ -108,9 +112,11 @@ fun App() {
             Napier.d("App: backStack initialized, last: ${backStack.lastOrNull()}")
 
             val lastDestination = backStack.lastOrNull()
-            val showBottomBar = lastDestination != null && 
-                               lastDestination !is Destination.InventoryDetail && 
-                               lastDestination !is Destination.Login
+            val showBottomBar = lastDestination != null &&
+                               lastDestination !is Destination.InventoryDetail &&
+                               lastDestination !is Destination.Login &&
+                               lastDestination !is Destination.SignUp &&
+                               lastDestination !is Destination.ForgotPassword
 
             Scaffold(
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -178,8 +184,22 @@ fun App() {
                                         backStack.add(Destination.Home)
                                     },
                                     onNavigateToSignUp = {
-                                        // TODO: Implement SignUp Screen
+                                        backStack.add(Destination.SignUp)
+                                    },
+                                    onNavigateToForgotPassword = {
+                                        backStack.add(Destination.ForgotPassword)
                                     }
+                                )
+                            }
+                            entry<Destination.SignUp> {
+                                SignUpScreen(
+                                    onBackClick = { backStack.removeLastOrNull() },
+                                    onBackToLoginClick = { backStack.removeLastOrNull() }
+                                )
+                            }
+                            entry<Destination.ForgotPassword> {
+                                ForgotPasswordScreen(
+                                    onBackClick = { backStack.removeLastOrNull() }
                                 )
                             }
                             entry<Destination.Home> {

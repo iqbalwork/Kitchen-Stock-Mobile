@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
     suspend fun signInWithEmail(email: String, password: String)
     suspend fun signUpWithEmail(email: String, password: String)
+    suspend fun resetPasswordForEmail(email: String)
     suspend fun signInWithGoogle()
     suspend fun signInWithApple()
     suspend fun signInAnonymously()
