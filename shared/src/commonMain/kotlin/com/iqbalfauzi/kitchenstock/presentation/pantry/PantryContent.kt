@@ -2,6 +2,7 @@ package com.iqbalfauzi.kitchenstock.presentation.pantry
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,23 +21,36 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.filled.CropFree
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Grain
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,60 +59,70 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.iqbalfauzi.kitchenstock.domain.model.StorageLocation
+import com.iqbalfauzi.kitchenstock.presentation.pantry.components.QuickAddSheet
 import com.iqbalfauzi.kitchenstock.presentation.pantry.model.ExpiryStatus
 import com.iqbalfauzi.kitchenstock.presentation.pantry.model.PantryItem
 import com.iqbalfauzi.kitchenstock.presentation.pantry.model.PantryUiState
+import com.iqbalfauzi.kitchenstock.ui.theme.KitchenStockShapes
 import com.iqbalfauzi.kitchenstock.ui.theme.KitchenStockTheme
 import com.iqbalfauzi.kitchenstock.ui.theme.LocalSpacing
+import com.iqbalfauzi.kitchenstock.ui.theme.PrimaryLight
+import com.iqbalfauzi.kitchenstock.ui.theme.SecondaryLight
+import com.iqbalfauzi.kitchenstock.ui.theme.StatusDanger
+import com.iqbalfauzi.kitchenstock.ui.theme.StatusDangerBg
+import com.iqbalfauzi.kitchenstock.ui.theme.StatusSafe
+import com.iqbalfauzi.kitchenstock.ui.theme.StatusSafeBg
+import com.iqbalfauzi.kitchenstock.ui.theme.StatusWarning
+import com.iqbalfauzi.kitchenstock.ui.theme.StatusWarningBg
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantryContent(
     uiState: PantryUiState,
     onIntent: (PantryIntent) -> Unit = {},
-    onAddClick: () -> Unit = {},
+    onAddClick: () -> Unit = { onIntent(PantryIntent.ShowAddSheet(true)) },
     onItemClick: (String) -> Unit = {}
 ) {
     val spacing = LocalSpacing.current
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Kitchen Stock",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.Inventory, contentDescription = "Inventory")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
-                    }
-                }
+            PantryHeaderBar(
+                searchQuery = uiState.searchQuery,
+                onSearchChange = { onIntent(PantryIntent.Search(it)) }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = onAddClick,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Item")
-            }
+                containerColor = SecondaryLight,
+                contentColor = Color.White,
+                shape = KitchenStockShapes.full,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Tambah Stok",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            )
         }
     ) { padding ->
         Column(
@@ -106,35 +130,50 @@ fun PantryContent(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            CategoryFilterRow(
-                categories = uiState.categories,
-                selectedCategoryId = uiState.selectedCategoryId,
-                onCategorySelected = { onIntent(PantryIntent.SelectCategory(it)) }
+            // Summary Cards Row (Glanceable 3 Kartu)
+            SummaryCardsRow(
+                expiredCount = uiState.expiredCount,
+                nearExpiryCount = uiState.nearExpiryCount,
+                totalStockCount = uiState.totalStockCount
             )
 
+            Spacer(modifier = Modifier.height(spacing.sm))
+
+            // Filter Lokasi Horizontal
+            LocationFilterRow(
+                categories = uiState.categories,
+                selectedCategoryId = uiState.selectedCategoryId,
+                onLocationSelected = { onIntent(PantryIntent.SelectCategory(it)) }
+            )
+
+            // Reactive Inventory Item List with Pull to Refresh
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,
                 onRefresh = { onIntent(PantryIntent.Refresh) },
                 modifier = Modifier.fillMaxSize()
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(spacing.md)
-                ) {
-                    uiState.groupedItems.forEach { (location, items) ->
-                        item(key = location) {
-                            Text(
-                                text = location,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = spacing.sm)
-                            )
-                        }
-                        items(items, key = { it.id }) { item ->
+                if (uiState.items.isEmpty()) {
+                    PantryEmptyState(
+                        searchQuery = uiState.searchQuery,
+                        onAddClick = onAddClick
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = spacing.md,
+                            end = spacing.md,
+                            top = spacing.xs,
+                            bottom = 88.dp // Space for Extended FAB
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(spacing.sm)
+                    ) {
+                        items(uiState.items, key = { it.id }) { item ->
                             PantryItemCard(
                                 item = item,
-                                onUpdateQuantity = { onIntent(PantryIntent.UpdateQuantity(item.id, it)) },
+                                onChangeQuantity = { delta ->
+                                    onIntent(PantryIntent.ChangeQuantity(item.id, delta))
+                                },
                                 onClick = { onItemClick(item.id) }
                             )
                         }
@@ -143,46 +182,379 @@ fun PantryContent(
             }
         }
     }
+
+    // Modal Quick Add Sheet
+    QuickAddSheet(
+        isVisible = uiState.isAddSheetVisible,
+        storageLocations = uiState.storageLocations,
+        categories = uiState.availableCategories,
+        onDismiss = { onIntent(PantryIntent.ShowAddSheet(false)) },
+        onQuickAdd = { name, quantity, unit, locationId, expiryDate, categoryId, keepOpen ->
+            onIntent(
+                PantryIntent.QuickAddIngredient(
+                    name = name,
+                    quantity = quantity,
+                    unit = unit,
+                    storageLocationId = locationId,
+                    expiryDate = expiryDate,
+                    categoryId = categoryId,
+                    keepOpen = keepOpen
+                )
+            )
+        }
+    )
 }
 
 @Composable
-private fun CategoryFilterRow(
-    categories: List<StorageLocation>,
-    selectedCategoryId: String?,
-    onCategorySelected: (String?) -> Unit
+private fun PantryHeaderBar(
+    searchQuery: String,
+    onSearchChange: (String) -> Unit
 ) {
     val spacing = LocalSpacing.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.md)
+            .padding(top = spacing.sm, bottom = spacing.xs)
+    ) {
+        // Baris Judul & Status Chip
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Chip Offline
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudOff,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Offline",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // Judul Aplikasi
+            Text(
+                text = "Kitchen Stock",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            // Tombol Filter / Menu
+            IconButton(
+                onClick = { },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FilterList,
+                    contentDescription = "Urutkan & Filter",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(spacing.xs))
+
+        // Search Bar Instan
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            placeholder = {
+                Text(
+                    text = "Cari bahan makanan atau bumbu...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Cari",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(
+                        onClick = { onSearchChange("") },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Bersihkan pencarian"
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CropFree,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            },
+            singleLine = true,
+            shape = KitchenStockShapes.full,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+            )
+        )
+    }
+}
+
+@Composable
+private fun SummaryCardsRow(
+    expiredCount: Int,
+    nearExpiryCount: Int,
+    totalStockCount: Int
+) {
+    val spacing = LocalSpacing.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Card 1: Kadaluwarsa (Merah)
+        Card(
+            modifier = Modifier.weight(1f),
+            colors = CardDefaults.cardColors(containerColor = StatusDangerBg),
+            shape = KitchenStockShapes.md,
+            border = BorderStroke(1.dp, StatusDanger.copy(alpha = 0.25f))
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ErrorOutline,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = StatusDanger
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(StatusDanger)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = expiredCount.toString(),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFeatureSettings = "tnum"
+                    ),
+                    color = StatusDanger
+                )
+                Text(
+                    text = "Kadaluwarsa",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = StatusDanger,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        // Card 2: Segera Habis (Amber)
+        Card(
+            modifier = Modifier.weight(1f),
+            colors = CardDefaults.cardColors(containerColor = StatusWarningBg),
+            shape = KitchenStockShapes.md,
+            border = BorderStroke(1.dp, StatusWarning.copy(alpha = 0.25f))
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.HourglassEmpty,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = StatusWarning
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = nearExpiryCount.toString(),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFeatureSettings = "tnum"
+                    ),
+                    color = StatusWarning
+                )
+                Text(
+                    text = "Segera Habis",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = StatusWarning,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        // Card 3: Total Stok (Netral)
+        Card(
+            modifier = Modifier.weight(1f),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            shape = KitchenStockShapes.md,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Inventory2,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = PrimaryLight
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = totalStockCount.toString(),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFeatureSettings = "tnum"
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Total Stok",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LocationFilterRow(
+    categories: List<StorageLocation>,
+    selectedCategoryId: String?,
+    onLocationSelected: (String?) -> Unit
+) {
+    val spacing = LocalSpacing.current
+
     LazyRow(
         contentPadding = PaddingValues(horizontal = spacing.md),
-        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        modifier = Modifier.padding(vertical = spacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(vertical = spacing.xs)
     ) {
+        // Chip "Semua"
         item {
-            FilterChip(
-                selected = selectedCategoryId == null,
-                onClick = { onCategorySelected(null) },
-                label = { Text("All") },
+            val isSelected = selectedCategoryId == null
+            Surface(
                 shape = CircleShape,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                border = null
-            )
+                color = if (isSelected) PrimaryLight else MaterialTheme.colorScheme.surfaceContainerLow,
+                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier
+                    .height(48.dp)
+                    .clickable { onLocationSelected(null) }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = "Semua",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
-        items(categories) { category ->
+
+        // Chip Lokasi
+        items(categories, key = { it.id }) { category ->
             val isSelected = category.id == selectedCategoryId
-            FilterChip(
-                selected = isSelected,
-                onClick = { onCategorySelected(category.id) },
-                label = { Text(category.name) },
+            val icon: ImageVector = when {
+                category.name.contains("Kulkas", ignoreCase = true) ||
+                    category.name.contains("Fridge", ignoreCase = true) -> Icons.Default.Kitchen
+                category.name.contains("Freezer", ignoreCase = true) -> Icons.Default.AcUnit
+                category.name.contains("Bumbu", ignoreCase = true) -> Icons.Default.Coffee
+                else -> Icons.Default.Inventory2
+            }
+
+            Surface(
                 shape = CircleShape,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                border = null
-            )
+                color = if (isSelected) PrimaryLight else MaterialTheme.colorScheme.surfaceContainerLow,
+                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier
+                    .height(48.dp)
+                    .clickable { onLocationSelected(category.id) }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    } else {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = category.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
     }
 }
@@ -190,113 +562,268 @@ private fun CategoryFilterRow(
 @Composable
 private fun PantryItemCard(
     item: PantryItem,
-    onUpdateQuantity: (Int) -> Unit,
+    onChangeQuantity: (Int) -> Unit,
     onClick: () -> Unit
 ) {
     val spacing = LocalSpacing.current
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = MaterialTheme.shapes.large,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        shape = KitchenStockShapes.lg,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Row(
-            modifier = Modifier.padding(spacing.md),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(spacing.md)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
+            // Baris Atas: Avatar + Judul & Subtitle + Multi-cue Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    item.icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Avatar Box (Tinted)
+                val avatarBgColor = when (item.expiryStatus) {
+                    is ExpiryStatus.Expired -> StatusDangerBg
+                    is ExpiryStatus.NearExpiry -> StatusWarningBg
+                    is ExpiryStatus.Safe -> StatusSafeBg
+                }
+                val avatarTint = when (item.expiryStatus) {
+                    is ExpiryStatus.Expired -> StatusDanger
+                    is ExpiryStatus.NearExpiry -> StatusWarning
+                    is ExpiryStatus.Safe -> StatusSafe
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(KitchenStockShapes.md)
+                        .background(avatarBgColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = avatarTint
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(spacing.md))
+
+                // Judul & Subtitle
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (item.category.isNotBlank()) "${item.location} • ${item.category}" else item.location,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(spacing.sm))
+
+                // Multi-cue Expiry Badge
+                MultiCueExpiryBadge(status = item.expiryStatus)
             }
-            Spacer(modifier = Modifier.width(spacing.md))
-            Column(modifier = Modifier.weight(1f)) {
+
+            Spacer(modifier = Modifier.height(spacing.sm))
+
+            // Baris Bawah: Sisa Stok Label + Stepper Kuantitas 48dp
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = item.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${item.unit} • ${item.location}",
+                    text = "Sisa Stok",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                ExpiryBadge(item.expiryStatus)
-                Spacer(modifier = Modifier.height(spacing.xs))
-                QuantityToggle(
-                    quantity = item.quantity,
-                    onUpdateQuantity = onUpdateQuantity
-                )
+
+                // Capsule Stepper
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(2.dp)
+                    ) {
+                        // Tombol minus / hapus (48×48 dp)
+                        IconButton(
+                            onClick = { onChangeQuantity(-1) },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            if (item.quantity <= 1) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "Kurang ke 0",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = StatusDanger
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Remove,
+                                    contentDescription = "Kurang 1",
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // Label Jumlah Tabular + Satuan
+                        Text(
+                            text = "${item.quantity} ${item.unit}",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFeatureSettings = "tnum"
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 6.dp)
+                        )
+
+                        // Tombol plus (48×48 dp)
+                        IconButton(
+                            onClick = { onChangeQuantity(1) },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Tambah 1",
+                                modifier = Modifier.size(18.dp),
+                                tint = PrimaryLight
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ExpiryBadge(status: ExpiryStatus) {
-    val (backgroundColor, textColor) = when (status) {
-        is ExpiryStatus.Warning -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.onSecondaryContainer
-        is ExpiryStatus.Critical -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.error
-        is ExpiryStatus.Normal -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+private fun MultiCueExpiryBadge(status: ExpiryStatus) {
+    val (bgColor, textColor, icon) = when (status) {
+        is ExpiryStatus.Safe -> Triple(StatusSafeBg, StatusSafe, Icons.Default.Check)
+        is ExpiryStatus.NearExpiry -> Triple(StatusWarningBg, StatusWarning, Icons.Default.HourglassEmpty)
+        is ExpiryStatus.Expired -> Triple(StatusDangerBg, StatusDanger, Icons.Default.Warning)
     }
 
     Box(
         modifier = Modifier
-            .clip(MaterialTheme.shapes.extraSmall)
-            .background(backgroundColor)
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .clip(KitchenStockShapes.sm)
+            .background(bgColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = status.label,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-            color = textColor,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = textColor
+            )
+            Text(
+                text = status.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = textColor,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
 @Composable
-private fun QuantityToggle(
-    quantity: Int,
-    onUpdateQuantity: (Int) -> Unit
+private fun PantryEmptyState(
+    searchQuery: String,
+    onAddClick: () -> Unit
 ) {
     val spacing = LocalSpacing.current
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        shape = CircleShape
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(spacing.xl),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            IconButton(
-                onClick = { onUpdateQuantity(quantity - 1) },
-                modifier = Modifier.size(24.dp)
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Remove, contentDescription = "Decrease", modifier = Modifier.size(16.dp))
+                Icon(
+                    imageVector = if (searchQuery.isNotBlank()) Icons.Default.Search else Icons.Default.Restaurant,
+                    contentDescription = null,
+                    modifier = Modifier.size(36.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+
+            Spacer(modifier = Modifier.height(spacing.md))
+
             Text(
-                text = quantity.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = spacing.sm)
+                text = if (searchQuery.isNotBlank()) "Bahan tidak ditemukan" else "Dapur masih kosong",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            IconButton(
-                onClick = { onUpdateQuantity(quantity + 1) },
-                modifier = Modifier.size(24.dp)
+
+            Spacer(modifier = Modifier.height(spacing.xs))
+
+            Text(
+                text = if (searchQuery.isNotBlank()) {
+                    "Tidak ada bahan yang cocok dengan \"$searchQuery\""
+                } else {
+                    "Mulai catat persediaan bahan makanan di dapur Anda"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(spacing.lg))
+
+            Surface(
+                shape = KitchenStockShapes.xl,
+                color = PrimaryLight,
+                modifier = Modifier
+                    .height(48.dp)
+                    .clickable(onClick = onAddClick)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Increase", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Tambah Bahan Pertama",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
@@ -308,14 +835,55 @@ fun PantryContentLightPreview() {
     KitchenStockTheme(darkTheme = false) {
         PantryContent(
             uiState = PantryUiState(
-                groupedItems = mapOf(
-                    "FRIDGE" to listOf(
-                        PantryItem("1", "Greek Yogurt", 1, "500g", "Fridge", Icons.Default.WaterDrop, ExpiryStatus.Warning("Expires in 3 days")),
-                        PantryItem("2", "Chicken Breast", 2, "units", "Fridge", Icons.Default.WaterDrop, ExpiryStatus.Critical("Expires Tomorrow"))
+                expiredCount = 1,
+                nearExpiryCount = 3,
+                totalStockCount = 24,
+                categories = listOf(
+                    StorageLocation("1", "Kulkas"),
+                    StorageLocation("2", "Freezer"),
+                    StorageLocation("3", "Rak Bumbu"),
+                    StorageLocation("4", "Pantry")
+                ),
+                items = listOf(
+                    PantryItem(
+                        id = "1",
+                        name = "Susu UHT Cokelat 1L",
+                        quantity = 1,
+                        unit = "pcs",
+                        location = "Kulkas",
+                        category = "Dairy",
+                        icon = Icons.Default.WaterDrop,
+                        expiryStatus = ExpiryStatus.Expired("Expired Kemarin")
                     ),
-                    "PANTRY" to listOf(
-                        PantryItem("3", "Avocados", 4, "units", "Pantry", Icons.Default.Eco, ExpiryStatus.Normal()),
-                        PantryItem("4", "Jasmine Rice", 1, "1.5kg", "Pantry", Icons.Default.Grain, ExpiryStatus.Normal())
+                    PantryItem(
+                        id = "2",
+                        name = "Daging Sapi Slice",
+                        quantity = 2,
+                        unit = "bungkus",
+                        location = "Freezer",
+                        category = "Daging",
+                        icon = Icons.Default.Restaurant,
+                        expiryStatus = ExpiryStatus.NearExpiry("2 hari lagi")
+                    ),
+                    PantryItem(
+                        id = "3",
+                        name = "Telur Ayam Omega",
+                        quantity = 8,
+                        unit = "butir",
+                        location = "Kulkas",
+                        category = "Dairy & Telur",
+                        icon = Icons.Default.Eco,
+                        expiryStatus = ExpiryStatus.NearExpiry("3 hari lagi")
+                    ),
+                    PantryItem(
+                        id = "4",
+                        name = "Bawang Merah",
+                        quantity = 500,
+                        unit = "gram",
+                        location = "Rak Bumbu",
+                        category = "Bumbu",
+                        icon = Icons.Default.Grain,
+                        expiryStatus = ExpiryStatus.Safe("Aman (15 hari)")
                     )
                 )
             )
@@ -329,17 +897,59 @@ fun PantryContentDarkPreview() {
     KitchenStockTheme(darkTheme = true) {
         PantryContent(
             uiState = PantryUiState(
-                groupedItems = mapOf(
-                    "FRIDGE" to listOf(
-                        PantryItem("1", "Greek Yogurt", 1, "500g", "Fridge", Icons.Default.WaterDrop, ExpiryStatus.Warning("Expires in 3 days")),
-                        PantryItem("2", "Chicken Breast", 2, "units", "Fridge", Icons.Default.WaterDrop, ExpiryStatus.Critical("Expires Tomorrow"))
+                expiredCount = 1,
+                nearExpiryCount = 3,
+                totalStockCount = 24,
+                categories = listOf(
+                    StorageLocation("1", "Kulkas"),
+                    StorageLocation("2", "Freezer"),
+                    StorageLocation("3", "Rak Bumbu"),
+                    StorageLocation("4", "Pantry")
+                ),
+                items = listOf(
+                    PantryItem(
+                        id = "1",
+                        name = "Susu UHT Cokelat 1L",
+                        quantity = 1,
+                        unit = "pcs",
+                        location = "Kulkas",
+                        category = "Dairy",
+                        icon = Icons.Default.WaterDrop,
+                        expiryStatus = ExpiryStatus.Expired("Expired Kemarin")
                     ),
-                    "PANTRY" to listOf(
-                        PantryItem("3", "Avocados", 4, "units", "Pantry", Icons.Default.Eco, ExpiryStatus.Normal()),
-                        PantryItem("4", "Jasmine Rice", 1, "1.5kg", "Pantry", Icons.Default.Grain, ExpiryStatus.Normal())
+                    PantryItem(
+                        id = "2",
+                        name = "Daging Sapi Slice",
+                        quantity = 2,
+                        unit = "bungkus",
+                        location = "Freezer",
+                        category = "Daging",
+                        icon = Icons.Default.Restaurant,
+                        expiryStatus = ExpiryStatus.NearExpiry("2 hari lagi")
+                    ),
+                    PantryItem(
+                        id = "3",
+                        name = "Telur Ayam Omega",
+                        quantity = 8,
+                        unit = "butir",
+                        location = "Kulkas",
+                        category = "Dairy & Telur",
+                        icon = Icons.Default.Eco,
+                        expiryStatus = ExpiryStatus.NearExpiry("3 hari lagi")
+                    ),
+                    PantryItem(
+                        id = "4",
+                        name = "Bawang Merah",
+                        quantity = 500,
+                        unit = "gram",
+                        location = "Rak Bumbu",
+                        category = "Bumbu",
+                        icon = Icons.Default.Grain,
+                        expiryStatus = ExpiryStatus.Safe("Aman (15 hari)")
                     )
                 )
             )
         )
     }
 }
+
