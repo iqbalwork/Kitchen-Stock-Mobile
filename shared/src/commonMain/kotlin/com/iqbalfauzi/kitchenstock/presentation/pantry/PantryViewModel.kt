@@ -109,8 +109,10 @@ class PantryViewModel(
 
         val locationName = location?.name ?: "Unknown"
         val icon = when {
-            locationName.contains("Fridge", ignoreCase = true) -> Icons.Default.Kitchen
-            locationName.contains("Pantry", ignoreCase = true) -> Icons.Default.Inventory2
+            locationName.contains("Kulkas", ignoreCase = true) ||
+                locationName.contains("Fridge", ignoreCase = true) -> Icons.Default.Kitchen
+            locationName.contains("Pantry", ignoreCase = true) ||
+                locationName.contains("Lemari", ignoreCase = true) -> Icons.Default.Inventory2
             locationName.contains("Freezer", ignoreCase = true) -> Icons.Default.AcUnit
             else -> Icons.Default.Coffee
         }
