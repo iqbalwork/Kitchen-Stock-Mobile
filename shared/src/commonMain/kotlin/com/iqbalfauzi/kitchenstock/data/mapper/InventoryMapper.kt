@@ -1,7 +1,5 @@
 package com.iqbalfauzi.kitchenstock.data.mapper
 
-import com.iqbalfauzi.kitchenstock.data.remote.model.InventoryDto
-import com.iqbalfauzi.kitchenstock.data.remote.model.ProductDto
 import com.iqbalfauzi.kitchenstock.db.GetInventoryItemById
 import com.iqbalfauzi.kitchenstock.db.GetInventoryWithDetails
 import com.iqbalfauzi.kitchenstock.domain.model.Category
@@ -64,17 +62,6 @@ fun GetInventoryItemById.toDomain(): InventoryItem {
     )
 }
 
-fun InventoryItem.toDto(): InventoryDto {
-    return InventoryDto(
-        id = id,
-        productId = productId,
-        storageLocationId = storageLocationId,
-        quantity = quantity,
-        expiryDate = expiryDate?.toString(),
-        updatedAt = updatedAt.toString()
-    )
-}
-
 fun ProductEntity.toDomain(): Product {
     return Product(
         id = id,
@@ -100,18 +87,5 @@ fun CategoryEntity.toDomain(): Category {
         id = id,
         name = name,
         icon = icon
-    )
-}
-
-fun Product.toDto(userId: String? = null): ProductDto {
-    return ProductDto(
-        id = id,
-        userId = userId,
-        categoryId = categoryId,
-        name = name,
-        barcode = barcode,
-        unit = unit,
-        minStockLevel = minStockLevel,
-        imageUrl = imageUrl
     )
 }

@@ -3,7 +3,6 @@ package com.iqbalfauzi.kitchenstock.presentation.shopping
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iqbalfauzi.kitchenstock.domain.model.StorageLocation
-import com.iqbalfauzi.kitchenstock.domain.repository.ShoppingRepository
 import com.iqbalfauzi.kitchenstock.domain.usecase.GetShoppingListUseCase
 import com.iqbalfauzi.kitchenstock.domain.usecase.ToggleShoppingItemUseCase
 import com.iqbalfauzi.kitchenstock.domain.usecase.DeleteShoppingItemUseCase
@@ -18,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -26,8 +26,7 @@ class ShoppingViewModel(
     private val toggleShoppingItemUseCase: ToggleShoppingItemUseCase,
     private val deleteShoppingItemUseCase: DeleteShoppingItemUseCase,
     private val upsertInventoryItemUseCase: UpsertInventoryItemUseCase,
-    private val getStorageLocationsUseCase: GetStorageLocationsUseCase,
-    private val shoppingRepository: ShoppingRepository
+    private val getStorageLocationsUseCase: GetStorageLocationsUseCase
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -67,7 +66,6 @@ class ShoppingViewModel(
     )
 
     init {
-        syncData()
         loadStorageLocations()
     }
 
@@ -79,16 +77,12 @@ class ShoppingViewModel(
         }
     }
 
+    /** Data mengalir reaktif dari SQLDelight; refresh cuma memutar indikator. */
     private fun syncData() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            try {
-                shoppingRepository.syncShoppingList()
-            } catch (e: Exception) {
-                // Log error
-            } finally {
-                _isRefreshing.value = false
-            }
+            yield()
+            _isRefreshing.value = false
         }
     }
 
@@ -108,13 +102,11 @@ class ShoppingViewModel(
     @OptIn(ExperimentalUuidApi::class)
     private fun addItemToInventory(id: String) {
         viewModelScope.launch {
-            // 1. Find the shopping item
             val shoppingItem = getShoppingListUseCase().first().find { it.id == id } ?: return@launch
-            
-            // 2. Find "Lemari Pantry" location
-            val pantryLocation = _storageLocations.value.find { 
-                it.name.contains("Lemari Pantry", ignoreCase = true) 
-            } ?: _storageLocations.value.firstOrNull() // Fallback to first if not found
+
+            val pantryLocation = _storageLocations.value.find {
+                it.name.contains("Lemari Pantry", ignoreCase = true)
+            } ?: _storageLocations.value.firstOrNull()
 
             if (pantryLocation != null) {
                 val inventoryItem = com.iqbalfauzi.kitchenstock.domain.model.InventoryItem(
@@ -127,11 +119,8 @@ class ShoppingViewModel(
                     product = null,
                     location = null
                 )
-                
-                // 3. Add to inventory
+
                 upsertInventoryItemUseCase(inventoryItem)
-                
-                // 4. Remove from shopping list
                 deleteShoppingItemUseCase(id)
             }
         }

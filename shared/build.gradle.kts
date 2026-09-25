@@ -1,4 +1,3 @@
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -8,7 +7,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sqldelight)
-    alias(libs.plugins.buildkonfig)
     alias(libs.plugins.kotlinSerialization)
 }
 
@@ -86,11 +84,6 @@ kotlin {
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
 
-            // Backend
-            implementation(libs.supabase.postgrest)
-            implementation(libs.supabase.auth)
-            implementation(libs.supabase.realtime)
-
             // Image Loading
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
@@ -131,18 +124,6 @@ sqldelight {
         create("KitchenDatabase") {
             packageName.set("com.iqbalfauzi.kitchenstock.db")
         }
-    }
-}
-
-buildkonfig {
-    packageName = "com.iqbalfauzi.kitchenstock"
-
-    defaultConfigs {
-        val projectId = project.findProperty("supabase.project.id")?.toString() ?: ""
-        val anonKey = project.findProperty("supabase.anon.key")?.toString() ?: ""
-        
-        buildConfigField(STRING, "SUPABASE_URL", "https://$projectId.supabase.co")
-        buildConfigField(STRING, "SUPABASE_ANON_KEY", anonKey)
     }
 }
 

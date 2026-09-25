@@ -9,10 +9,10 @@ You are an expert Kotlin Multiplatform (KMP) and Compose Multiplatform (CMP) dev
 - **Dependency Injection:** Koin
 - **Navigation:** Jetpack Navigation Compose (Navigation 3)
 - **Local Database:** SQLDelight (Offline-first / Single Source of Truth)
-- **Remote Backend:** Supabase (gotrue-kt, postgrest-kt)
+- **Remote Backend:** — (dihapus; mode offline. Remote layer dulu: Supabase, lihat `SUPABASE_SETUP.md`)
 - **Session Management:** Multiplatform Settings (for local settings and session persistence)
 - **Image Loading:** Coil3
-- **Configuration:** BuildKonfig (Multiplatform BuildConfig)
+- **Configuration:** — (BuildKonfig dilepas bersama Supabase; pasang ulang kalau butuh BuildConfig)
 
 ---
 
@@ -27,10 +27,7 @@ Always separate concerns strictly into three layers:
 
 2. **Data Layer:**
     - Contains implementations of the Domain repositories.
-    - Handles the **Offline-First** strategy:
-        - Always read/write to the **SQLDelight** local database first.
-        - Emit changes to the UI via Kotlin `Flow`.
-        - Sync to **Supabase** in the background.
+    - **Offline-first:** SQLDelight adalah **single source of truth**. Write lokal dulu, UI reaktif lewat `Flow` dari query SQLDelight. Tidak ada network/remote layer di mode offline.
 
 3. **Presentation Layer (MVI):**
     - Each feature must use a `ViewModel` that holds a single `StateFlow` representing the UI State.

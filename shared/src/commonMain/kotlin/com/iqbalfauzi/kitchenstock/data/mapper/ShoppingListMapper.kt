@@ -1,6 +1,5 @@
 package com.iqbalfauzi.kitchenstock.data.mapper
 
-import com.iqbalfauzi.kitchenstock.data.remote.model.ShoppingListDto
 import com.iqbalfauzi.kitchenstock.db.GetShoppingListWithDetails
 import com.iqbalfauzi.kitchenstock.domain.model.ShoppingListItem
 import com.iqbalfauzi.kitchenstock.domain.model.Product
@@ -30,17 +29,5 @@ fun GetShoppingListWithDetails.toDomain(): ShoppingListItem {
                 )
             }
         )
-    )
-}
-
-fun ShoppingListItem.toDto(userId: String): ShoppingListDto {
-    return ShoppingListDto(
-        id = id,
-        userId = userId,
-        productId = productId,
-        quantity = quantity,
-        isBought = isBought,
-        createdAt = createdAt?.toString(),
-        updatedAt = updatedAt?.toString()
     )
 }

@@ -16,7 +16,6 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.android)
-    implementation(libs.supabase.auth)
     implementation(libs.napier)
 
     implementation(libs.compose.uiToolingPreview)

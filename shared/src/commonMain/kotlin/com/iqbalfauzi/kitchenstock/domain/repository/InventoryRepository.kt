@@ -12,7 +12,6 @@ interface InventoryRepository {
     fun getProducts(): Flow<List<Product>>
     fun getStorageLocations(): Flow<List<StorageLocation>>
     fun getCategories(): Flow<List<Category>>
-    suspend fun syncInventory()
     suspend fun upsertInventoryItem(item: InventoryItem)
     suspend fun upsertProduct(product: Product)
     suspend fun deleteInventoryItem(id: String)

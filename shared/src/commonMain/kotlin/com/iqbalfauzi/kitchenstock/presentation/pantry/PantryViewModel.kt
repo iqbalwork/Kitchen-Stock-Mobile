@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Kitchen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iqbalfauzi.kitchenstock.domain.model.InventoryItem
-import com.iqbalfauzi.kitchenstock.domain.repository.InventoryRepository
 import com.iqbalfauzi.kitchenstock.domain.usecase.GetInventoryItemsUseCase
 import com.iqbalfauzi.kitchenstock.domain.usecase.GetStorageLocationsUseCase
 import com.iqbalfauzi.kitchenstock.domain.usecase.UpsertInventoryItemUseCase
@@ -20,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
@@ -28,8 +28,7 @@ import kotlin.time.Clock
 class PantryViewModel(
     private val getInventoryItemsUseCase: GetInventoryItemsUseCase,
     private val getStorageLocationsUseCase: GetStorageLocationsUseCase,
-    private val upsertInventoryItemUseCase: UpsertInventoryItemUseCase,
-    private val inventoryRepository: InventoryRepository
+    private val upsertInventoryItemUseCase: UpsertInventoryItemUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(PantryUiState())
     val uiState: StateFlow<PantryUiState> = _uiState.asStateFlow()
@@ -38,7 +37,6 @@ class PantryViewModel(
 
     init {
         observeData()
-        syncData()
     }
 
     private fun observeData() {
@@ -49,13 +47,13 @@ class PantryViewModel(
                 _uiState
             ) { items, locations, state ->
                 allItems = items
-                
+
                 val filteredItems = if (state.selectedCategoryId == null) {
                     items
                 } else {
                     items.filter { it.storageLocationId == state.selectedCategoryId }
                 }
-                
+
                 Triple(filteredItems.map { it.toPantryItem() }, locations, state.selectedCategoryId)
             }.collect { (pantryItems, locations, selectedId) ->
                 _uiState.value = _uiState.value.copy(
@@ -63,15 +61,6 @@ class PantryViewModel(
                     selectedCategoryId = selectedId,
                     groupedItems = pantryItems.groupBy { it.location.uppercase() }
                 )
-            }
-        }
-    }
-
-    private fun syncData() {
-        viewModelScope.launch {
-            try {
-                inventoryRepository.syncInventory()
-            } catch (_: Exception) {
             }
         }
     }
@@ -88,15 +77,12 @@ class PantryViewModel(
         }
     }
 
+    /** Data mengalir reaktif dari SQLDelight; refresh cuma memutar indikator. */
     private fun refresh() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
-            try {
-                inventoryRepository.syncInventory()
-            } catch (_: Exception) {
-            } finally {
-                _uiState.value = _uiState.value.copy(isRefreshing = false)
-            }
+            yield()
+            _uiState.value = _uiState.value.copy(isRefreshing = false)
         }
     }
 
