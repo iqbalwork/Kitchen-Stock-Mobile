@@ -7,9 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Kitchen
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -25,10 +24,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
-import com.iqbalfauzi.kitchenstock.presentation.home.HomeScreen
 import com.iqbalfauzi.kitchenstock.presentation.inventory_detail.InventoryDetailScreen
 import com.iqbalfauzi.kitchenstock.presentation.pantry.PantryScreen
-import com.iqbalfauzi.kitchenstock.presentation.profile.ProfileScreen
+import com.iqbalfauzi.kitchenstock.presentation.settings.SettingsScreen
 import com.iqbalfauzi.kitchenstock.presentation.shopping.AddShoppingItemScreen
 import com.iqbalfauzi.kitchenstock.presentation.shopping.ShoppingScreen
 import com.iqbalfauzi.kitchenstock.ui.navigation.Destination
@@ -39,10 +37,9 @@ import kotlinx.serialization.modules.polymorphic
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
-            subclass(Destination.Home::class, Destination.Home.serializer())
             subclass(Destination.Pantry::class, Destination.Pantry.serializer())
             subclass(Destination.Shopping::class, Destination.Shopping.serializer())
-            subclass(Destination.Profile::class, Destination.Profile.serializer())
+            subclass(Destination.Settings::class, Destination.Settings.serializer())
             subclass(Destination.InventoryDetail::class, Destination.InventoryDetail.serializer())
             subclass(Destination.AddShoppingItem::class, Destination.AddShoppingItem.serializer())
         }
@@ -53,11 +50,12 @@ private val navConfig = SavedStateConfiguration {
 @Preview
 fun App() {
     KitchenStockTheme {
-        val backStack = rememberNavBackStack(navConfig, Destination.Home)
+        val backStack = rememberNavBackStack(navConfig, Destination.Pantry)
         val lastDestination = backStack.lastOrNull()
 
         val showBottomBar = lastDestination != null &&
-            lastDestination !is Destination.InventoryDetail
+            lastDestination !is Destination.InventoryDetail &&
+            lastDestination !is Destination.AddShoppingItem
 
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -65,18 +63,7 @@ fun App() {
                 if (showBottomBar) {
                     NavigationBar(windowInsets = WindowInsets(0, 0, 0, 0)) {
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                            label = { Text("Home") },
-                            selected = lastDestination is Destination.Home,
-                            onClick = {
-                                if (lastDestination !is Destination.Home) {
-                                    backStack.clear()
-                                    backStack.add(Destination.Home)
-                                }
-                            }
-                        )
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.Inventory, contentDescription = "Pantry") },
+                            icon = { Icon(Icons.Default.Kitchen, contentDescription = "Pantry") },
                             label = { Text("Pantry") },
                             selected = lastDestination is Destination.Pantry,
                             onClick = {
@@ -87,8 +74,8 @@ fun App() {
                             }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Shopping List") },
-                            label = { Text("Shopping List") },
+                            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Belanja") },
+                            label = { Text("Belanja") },
                             selected = lastDestination is Destination.Shopping,
                             onClick = {
                                 if (lastDestination !is Destination.Shopping) {
@@ -98,13 +85,13 @@ fun App() {
                             }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                            label = { Text("Profile") },
-                            selected = lastDestination is Destination.Profile,
+                            icon = { Icon(Icons.Default.Settings, contentDescription = "Pengaturan") },
+                            label = { Text("Pengaturan") },
+                            selected = lastDestination is Destination.Settings,
                             onClick = {
-                                if (lastDestination !is Destination.Profile) {
+                                if (lastDestination !is Destination.Settings) {
                                     backStack.clear()
-                                    backStack.add(Destination.Profile)
+                                    backStack.add(Destination.Settings)
                                 }
                             }
                         )
@@ -116,9 +103,6 @@ fun App() {
                 NavDisplay(
                     backStack = backStack,
                     entryProvider = entryProvider {
-                        entry<Destination.Home> {
-                            HomeScreen(onNavigateToDetail = { backStack.add(Destination.InventoryDetail(it)) })
-                        }
                         entry<Destination.Pantry> {
                             PantryScreen(onNavigateToDetail = { backStack.add(Destination.InventoryDetail(it)) })
                         }
@@ -128,8 +112,8 @@ fun App() {
                                 onNavigateToAddItem = { backStack.add(Destination.AddShoppingItem) }
                             )
                         }
-                        entry<Destination.Profile> {
-                            ProfileScreen()
+                        entry<Destination.Settings> {
+                            SettingsScreen()
                         }
                         entry<Destination.InventoryDetail> { key ->
                             InventoryDetailScreen(
