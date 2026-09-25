@@ -2,7 +2,6 @@ package com.iqbalfauzi.kitchenstock.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.iqbalfauzi.kitchenstock.domain.repository.InventoryRepository
 import com.iqbalfauzi.kitchenstock.domain.usecase.GetHomeSummaryUseCase
 import com.iqbalfauzi.kitchenstock.presentation.home.model.HomeUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,10 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 class HomeViewModel(
-    private val getHomeSummaryUseCase: GetHomeSummaryUseCase,
-    private val inventoryRepository: InventoryRepository
+    private val getHomeSummaryUseCase: GetHomeSummaryUseCase
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -41,15 +40,12 @@ class HomeViewModel(
         }
     }
 
+    /** Data mengalir reaktif dari SQLDelight; refresh cuma memutar indikator. */
     private fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            try {
-                inventoryRepository.syncInventory()
-            } catch (_: Exception) {
-            } finally {
-                _isRefreshing.value = false
-            }
+            yield()
+            _isRefreshing.value = false
         }
     }
 }

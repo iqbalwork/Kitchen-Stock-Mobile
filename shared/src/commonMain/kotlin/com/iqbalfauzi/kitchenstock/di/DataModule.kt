@@ -1,24 +1,11 @@
 package com.iqbalfauzi.kitchenstock.di
 
-import com.iqbalfauzi.kitchenstock.BuildKonfig
-import com.iqbalfauzi.kitchenstock.data.repository.AuthRepositoryImpl
 import com.iqbalfauzi.kitchenstock.data.repository.InventoryRepositoryImpl
 import com.iqbalfauzi.kitchenstock.data.repository.ShoppingRepositoryImpl
 import com.iqbalfauzi.kitchenstock.db.KitchenDatabase
-import com.iqbalfauzi.kitchenstock.domain.repository.AuthRepository
 import com.iqbalfauzi.kitchenstock.domain.repository.InventoryRepository
 import com.iqbalfauzi.kitchenstock.domain.repository.ShoppingRepository
 import com.russhwolf.settings.Settings
-import io.github.aakira.napier.Napier
-import io.github.jan.supabase.annotations.SupabaseInternal
-import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.SettingsSessionManager
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.logging.LogLevel
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.realtime.Realtime
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
 import org.koin.dsl.module
 
 val dataModule = module {
@@ -29,44 +16,11 @@ val dataModule = module {
         KitchenDatabase(driver)
     }
 
-    @OptIn(SupabaseInternal::class)
-    single {
-        createSupabaseClient(
-            supabaseUrl = BuildKonfig.SUPABASE_URL,
-            supabaseKey = BuildKonfig.SUPABASE_ANON_KEY
-        ) {
-            install(Postgrest)
-            install(Auth) {
-                sessionManager = SettingsSessionManager(get())
-                scheme = "kitchenstock"
-                host = "login-callback"
-            }
-            install(Realtime)
-
-            defaultLogLevel = LogLevel.DEBUG
-
-            httpConfig {
-                install(Logging) {
-                    logger = object : Logger {
-                        override fun log(message: String) {
-                            Napier.d(tag = "SupabaseNetwork") { message }
-                        }
-                    }
-                    level = io.ktor.client.plugins.logging.LogLevel.ALL
-                }
-            }
-        }
-    }
-
     single<InventoryRepository> {
-        InventoryRepositoryImpl(get(), get())
-    }
-
-    single<AuthRepository> {
-        AuthRepositoryImpl(get())
+        InventoryRepositoryImpl(get())
     }
 
     single<ShoppingRepository> {
-        ShoppingRepositoryImpl(get(), get())
+        ShoppingRepositoryImpl(get())
     }
 }

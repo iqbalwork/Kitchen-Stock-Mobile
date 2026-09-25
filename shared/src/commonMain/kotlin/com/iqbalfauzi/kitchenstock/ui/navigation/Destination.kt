@@ -4,12 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 sealed interface Destination : NavKey {
-    @Serializable
-    data object Login : Destination
-
-    @Serializable
-    data object Home : Destination
-
+    // Bottom nav destinations
     @Serializable
     data object Pantry : Destination
 
@@ -17,17 +12,12 @@ sealed interface Destination : NavKey {
     data object Shopping : Destination
 
     @Serializable
-    data object Profile : Destination
+    data object Settings : Destination
 
+    // Secondary destinations
     @Serializable
     data class InventoryDetail(val id: String? = null) : Destination
 
     @Serializable
     data object AddShoppingItem : Destination
-
-    @Serializable
-    data object SignUp : Destination
-
-    @Serializable
-    data object ForgotPassword : Destination
 }

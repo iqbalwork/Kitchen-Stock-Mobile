@@ -140,4 +140,18 @@ UPDATE ShoppingList SET isBought = ?, updatedAt = ? WHERE id = ?;
 deleteAllShoppingList:
 DELETE FROM ShoppingList;
 
+-- Seed awal: kategori + lokasi penyimpanan (produk sengaja kosong).
+-- Dijalankan saat database dibuat; OR IGNORE supaya aman kalau diulang.
+INSERT OR IGNORE INTO Category(id, name, icon) VALUES ('cat-sayur', 'Sayur', '🥬');
+INSERT OR IGNORE INTO Category(id, name, icon) VALUES ('cat-buah', 'Buah', '🍎');
+INSERT OR IGNORE INTO Category(id, name, icon) VALUES ('cat-protein', 'Protein', '🥩');
+INSERT OR IGNORE INTO Category(id, name, icon) VALUES ('cat-karbohidrat', 'Karbohidrat', '🍚');
+INSERT OR IGNORE INTO Category(id, name, icon) VALUES ('cat-bumbu', 'Bumbu', '🧂');
+INSERT OR IGNORE INTO Category(id, name, icon) VALUES ('cat-minuman', 'Minuman', '🥛');
+
+INSERT OR IGNORE INTO StorageLocation(id, name, description) VALUES ('loc-kulkas', 'Kulkas', 'Chiller, suhu 2-8°C');
+INSERT OR IGNORE INTO StorageLocation(id, name, description) VALUES ('loc-freezer', 'Freezer', 'Beku, suhu -18°C');
+INSERT OR IGNORE INTO StorageLocation(id, name, description) VALUES ('loc-lemari-pantry', 'Lemari Pantry', 'Suhu ruang, bahan kering');
+
+
 
